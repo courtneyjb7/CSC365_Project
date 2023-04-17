@@ -81,6 +81,7 @@ For every dog in `dogs`:
 ```
 This endpoint returns all the training classes in the database. For every class:
   `class_id`: the id associated with the class
+  `type`: the type of class
   `trainer_id`: name of the trainer
   `date`: the day the class takes place
   `start_time`: the time the class starts
@@ -91,7 +92,9 @@ This endpoint returns all the training classes in the database. For every class:
 ```
 This endpoint returns a specific class in the database. For every class:
   `class_id`: the id associated with the trainer
-  `trainer_id`: name of the trainer
+  `type`: the type of class
+  `description`: description of the class
+  `trainer_id`: name of the trainer holding the class
   `date`: the day the class takes place
   `start_time`: the time the class starts
   `end_time`: the time the class ends
