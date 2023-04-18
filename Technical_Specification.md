@@ -14,8 +14,6 @@ As a trainer, I want to be able to view important information about a dog attend
 
 As a dog owner/customer, I cannot access this information.
 
-As a trainer, I want to have a secure account where I can login with a username and password. 
-
 ## Endpoints
 
 /trainer/{trainer_id}
@@ -71,7 +69,8 @@ This endpoint returns information about a dog in the database. For every dog, it
   `breed`: the dog’s breed
   `previous_classes`: a list of class_ids of classes the dog has taken
   `future_classes`: a list of class_ids of classes the dog is signed up for
-  `owner_comments`: a list of additional important information from the owner, such as the dog’s allergies, possible aggression issues, etc. 
+  `owner_comments`: a list of additional important information from the owner, 
+  		    such as the dog’s allergies, possible aggression issues, etc. 
   `trainer_comments`: a list of comments from the trainer about the dog’s progress
 ```
 /class-types/
