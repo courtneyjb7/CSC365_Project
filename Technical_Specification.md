@@ -30,7 +30,7 @@ This endpoint can return and update a trainer by its identifiers. For each train
 }
 ```
 /classes/
-		```
+```
 This endpoint returns all the training classes in the database. For every class, it returns:
   `class_id`: the id associated with the class
   `trainer_id`: the id of the trainer teaching the class
