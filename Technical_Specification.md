@@ -74,7 +74,7 @@ This endpoint returns information about a dog in the database. For every dog, it
   `trainer_comments`: a list of comments from the trainer about the dog’s progress
 ```
 /class-types/
-		```
+```
 This endpoint returns all of the types of training classes in the database. For every type, it returns:
   `type_id`: the id associated with the class type
   `type`: the type of class
