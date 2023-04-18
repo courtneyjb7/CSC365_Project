@@ -90,7 +90,7 @@ This endpoint returns the designated message to an owner whose dog has not atten
   `class_id`: class_id that dog has missed
   `start_time`: time class starts
   `end_time`: time class ends
-
+```
 
 ## Edge cases and transaction flows
 
