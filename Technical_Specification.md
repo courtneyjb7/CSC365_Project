@@ -28,18 +28,14 @@ This endpoint can return and update a trainer by its identifiers. For each train
 	  DATE: [class_id, class_id, …],
 	}
 ```
-POST /trainer/{trainer_id}
+POST /classes/
 ```
 This endpoint adds a new class to a trainer's schedule.
   `date`: the day the class takes place, of datatype DATE
   `start_time`: the time the class starts
   `end_time`: the time the class ends
-  `num_of_dogs`: the number of dogs attending, initialized to 0
+  `max_num_dogs`: the maximum amount of dogs that are allowed to attend
   `class_type_id`:the id of the type of class 
-
-There are also optional fields for updating a trainer's name and email.
-  `name`: name of the trainer
-  `email`: the company email of the trainer  
 ```
 GET /classes/
 ```
@@ -65,6 +61,10 @@ This endpoint returns a specific class in the database. For every class, it retu
   `dogs_attending`: a list of dog_ids for the dogs signed up for the class
   `dogs_attended`: a list of dog_ids for the dogs that showed up, or null if the class has not taken place
 ```
+DELETE /classes/{class id}
+```
+This endpoint deletes a class based on its class ID.
+```
 GET /classes/{class_id}/dogs/
 ```
 This endpoint returns all the dogs attending a specific class. For every dog, it returns:
@@ -73,7 +73,7 @@ This endpoint returns all the dogs attending a specific class. For every dog, it
   `client_email`: the email of the owner of the dog
   `attended`: boolean indicating if the dog attended, or null if the class has not taken place
 ```
-POST /classes/{class_id}/{dog_id}/attendance
+PUT /classes/{class_id}/{dog_id}/attendance
 ```
 This endpoint sets a dog's attendance to a specific class to true or false.
   `attendance`: boolean indicating if the dog attended
@@ -103,19 +103,7 @@ This endpoint returns all of the types of training classes in the database. For 
   `type_id`: the id associated with the class type
   `type`: the type of class
   `description`: a description of the class
-  `max_num_dogs`: the maximum amount of dogs that are allowed to attend
 ```
-POST /email-reminder/{trainer_id}/{dog_id}
-``` 
-This endpoint returns the designated message to an owner whose dog has not attended the class.
-  `to`: dog owner’s email 
-  `from`: trainer’s email
-  `notice`: “Dog has missed class.”
-  `class_id`: class_id that dog has missed
-  `start_time`: time class starts
-  `end_time`: time class ends
-```
-
 ## Edge cases and transaction flows
 
 If a dog does not attend a class, we will send an email reminder to the dog owner’s email.
