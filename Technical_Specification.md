@@ -76,7 +76,10 @@ This endpoint returns all the dogs attending a specific class. For every dog, it
 PUT /classes/{class_id}/{dog_id}/attendance
 ```
 This endpoint sets a dog's attendance to a specific class to true or false.
-  `attendance`: boolean indicating if the dog attended
+  `attendance_id`: the id of the attendance record
+  `dog_id`: the id of the dog attending
+  `class_id`: the id of the class the dog is attending
+  `check_in`: the timestamp the dog checked in, initialized to null
 ```
 GET /dogs/{dog_id}
 ```
