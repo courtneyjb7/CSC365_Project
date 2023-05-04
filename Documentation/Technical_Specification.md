@@ -23,7 +23,7 @@ This endpoint can return and update a trainer by its identifiers. For each train
   `name`: name of the trainer
   `email`: the company email of the trainer
 ```
-POST /classes/
+POST /classes/{trainer_id}
 ```
 This endpoint adds a new class to a trainer's schedule.
   `date`: the day the class takes place, of datatype DATE
