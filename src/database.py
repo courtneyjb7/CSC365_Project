@@ -28,8 +28,10 @@ def database_connection_url():
 engine = sqlalchemy.create_engine(database_connection_url())
 metadata_obj = sqlalchemy.MetaData()
 
-movies = sqlalchemy.Table("movies", metadata_obj, autoload_with=engine)
-characters = sqlalchemy.Table("characters", metadata_obj, autoload_with=engine)
-lines = sqlalchemy.Table("lines", metadata_obj, autoload_with=engine)
-conversations = sqlalchemy.Table("conversations", metadata_obj, autoload_with=engine)
+trainers = sqlalchemy.Table("trainers", metadata_obj, autoload_with=engine)
+dogs = sqlalchemy.Table("dogs", metadata_obj, autoload_with=engine)
+comments = sqlalchemy.Table("comments", metadata_obj, autoload_with=engine)
+classes = sqlalchemy.Table("classes", metadata_obj, autoload_with=engine)
+class_types = sqlalchemy.Table("class_types", metadata_obj, autoload_with=engine)
+attendance = sqlalchemy.Table("attendance", metadata_obj, autoload_with=engine)
 

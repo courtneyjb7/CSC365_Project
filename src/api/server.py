@@ -1,33 +1,17 @@
 from fastapi import FastAPI
-from src.api import characters, movies, lines, conversations, pkg_util
+from src.api import trainers, pkg_util, classes
 
 description = """
-Movie API returns dialog statistics on top hollywood movies from decades past.
-
-## Characters
-
-You can:
-* **list characters with sorting and filtering options.**
-* **retrieve a specific character by id**
-
-## Movies
-
-You can:
-* **list movies with sorting and filtering options.**
-* **retrieve a specific movie by id**
+Dog Training and Boarding company
 """
 tags_metadata = [
     {
-        "name": "characters",
-        "description": "Access information on characters in movies.",
+        "name": "classes",
+        "description": "Access information on classes available.",
     },
     {
-        "name": "movies",
-        "description": "Access information on top-rated movies.",
-    },
-    {
-        "name": "lines",
-        "description": "Access information on lines of top-rated movies.",
+        "name": "trainers",
+        "description": "Access information on trainers.",
     },
 ]
 
@@ -36,18 +20,17 @@ app = FastAPI(
     description=description,
     version="0.0.1",
     contact={
-        "name": "Veronica Guzman",
-        "email": "vguzma08@calpoly.edu",
+        "name1": "Veronica Guzman",
+        "email1": "vguzma08@calpoly.edu",
+        "name2": "Courtney Barber",
+        "email2": "cbarbe03@calpoly.edu"
     },
     openapi_tags=tags_metadata,
 )
-app.include_router(characters.router)
-app.include_router(movies.router)
-app.include_router(lines.router)
-app.include_router(pkg_util.router)
-app.include_router(conversations.router)
+app.include_router(trainers.router)
+app.include_router(classes.router)
 
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to the Movie API. See /docs for more information."}
+    return {"message": "Welcome to the Dog Trainer API. See /docs for more information."}
