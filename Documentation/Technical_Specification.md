@@ -22,13 +22,8 @@ This endpoint can return and update a trainer by its identifiers. For each train
   `trainer_id`: the id associated with the trainer
   `name`: name of the trainer
   `email`: the company email of the trainer
-  `schedule_id`: the id of the trainer's schedule
-  `schedule`: a dictionary of days (of datatype DATE), each mapped to a list of IDs of classes the trainer is holding that day
-	{	
-	  DATE: [class_id, class_id, …],
-	}
 ```
-POST /classes/
+POST /classes/{trainer_id}
 ```
 This endpoint adds a new class to a trainer's schedule.
   `date`: the day the class takes place, of datatype DATE
@@ -46,7 +41,7 @@ This endpoint returns all the training classes in the database. For every class,
   `date`: the date the class take places
   `num_of_dogs`: the number of dogs attending the class
 
-You can filter by type by using the query parameter `type`
+You can filter by type or date by using the query parameters `type` or `date`.
 ```
 GET /classes/{class_id}
 ```
@@ -54,7 +49,7 @@ This endpoint returns a specific class in the database. For every class, it retu
   `class_id`: the id associated with the trainer
   `type`: the type of the class
   `description`: description of the class
-  `trainer_id`: name of the trainer
+  `trainer_name`: name of the trainer
   `date`: the day the class takes place
   `start_time`: the time the class starts
   `end_time`: the time the class ends
@@ -87,18 +82,18 @@ This endpoint returns information about a dog in the database. For every dog, it
   `dog_id`: the id associated with the dog
   `name`: the name of the dog
   `client_email`: the email of the owner of the dog
-  `age`: the dog’s age
+  `birthday`: the dog’s date of birth
   `breed`: the dog’s breed
-  `previous_classes`: a list of class_ids of classes the dog has taken
-  `future_classes`: a list of class_ids of classes the dog is signed up for
-  `owner_comments`: a string of information from the owner about the dog, 
-  		    such as the dog’s allergies, possible aggression issues, etc.  (optional)
   `trainer_comments`: a string of comments from the trainer about the dog’s progress (optional)
 ```
 POST /dogs/{dog_id}/comments
 ```
 This endpoint updates trainer comments for a dog. 
-  `trainer_comments`: a string to append to the existing comments from the trainer about the dog’s progress
+  `comment_id`: the id of the comment
+  `dog_id`: the id of the dog the comment is about
+  `trainer_id`: the id of the trainer who made the comment
+  `time_added`: the time and date the comment was made
+  `comment_text`: a string from the trainer about the dog’s progress
 ```
 GET /class-types/
 ```
