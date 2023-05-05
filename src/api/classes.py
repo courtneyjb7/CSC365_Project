@@ -11,7 +11,7 @@ class class_sort_options(str, Enum):
     date = "date"
 
 @router.get("/classes/", tags=["classes"])
-def get_trainer(
+def get_classes(
     name: str = "",
     limit: int = Query(50, ge=1, le=250),
     offset: int = Query(0, ge=0),

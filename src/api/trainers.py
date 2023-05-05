@@ -15,4 +15,5 @@ def get_trainer(trainer_id: int):
         `name`: name of the trainer
         `email`: the company email of the trainer
     """
+    
     return "Trainer"
