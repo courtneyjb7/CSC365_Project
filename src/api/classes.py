@@ -2,7 +2,9 @@ from fastapi import APIRouter, HTTPException
 from enum import Enum
 from src import database as db
 from fastapi.params import Query
+from pydantic import BaseModel
 import sqlalchemy
+from datetime import date, time
 
 router = APIRouter()
 
@@ -29,16 +31,25 @@ def get_trainer(
     """
     return None
 
+class ClassJson(BaseModel):
+    date: date
+    start_time: time
+    end_time: time
+    class_type_id: int
 
 
 @router.post("/classes/{trainer_id}", tags=["classes"])
-def add_classes(trainer_id: int, classes: None):
+def add_classes(trainer_id: int, classes: ClassJson):
     """
     This endpoint adds a new class to a trainer's schedule.
         `date`: the day the class takes place, of datatype DATE
         `start_time`: the time the class starts
         `end_time`: the time the class ends
-        `max_num_dogs`: the maximum amount of dogs that are allowed to attend
         `class_type_id`:the id of the type of class
     """
+    # verify data types
+    # INSERT INTO classes (class_id, trainer_id, date, start_time, end_time, class_type_id) 
+            # VALUES (:class_id, :trainer_id, :c2, :movie_id)
     return None
+
+    # TODO: update documentation!
