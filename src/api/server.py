@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from src.api import trainers, pkg_util, classes, dogs
+from src.api import trainers, classes, dogs
 
 description = """
 Dog Training and Boarding company
@@ -38,4 +38,5 @@ app.include_router(dogs.router)
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to the Dog Trainer API. See /docs for more information."}
+    return {"message": "Welcome to the Dog Trainer API. \
+            See /docs for more information."}

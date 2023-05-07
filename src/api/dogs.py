@@ -1,7 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from enum import Enum
 from src import database as db
-from fastapi.params import Query
 import sqlalchemy
 
 router = APIRouter()
@@ -10,13 +8,15 @@ router = APIRouter()
 @router.get("/dogs/{dog_id}", tags=["dogs"])
 def get_dog(dog_id: int):
     """
-    This endpoint returns information about a dog in the database. For every dog, it returns:
+    This endpoint returns information about a dog in the database. 
+    For every dog, it returns:
         `dog_id`: the id associated with the dog
         `name`: the name of the dog
         `client_email`: the email of the owner of the dog
         `birthday`: the dog's date of birth
         `breed`: the dog's breed
-        `trainer_comments`: a list of comments from the trainer about the dog's progress (optional)
+        `trainer_comments`: a list of comments from the 
+            trainer about the dog's progress (optional)
 
             Each comment returns:
                 `comment_id`: the id of the comment

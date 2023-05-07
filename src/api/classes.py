@@ -1,5 +1,4 @@
 from fastapi import APIRouter, HTTPException
-from enum import Enum
 from src import database as db
 from fastapi.params import Query
 import sqlalchemy
@@ -18,7 +17,8 @@ def get_classes(
     # sort: class_sort_options = class_sort_options.date
 ):
     """
-    This endpoint returns all the training classes in the database. For every class, it returns:
+    This endpoint returns all the training classes in the database. 
+    For every class, it returns:
         `class_id`: the id associated with the class
         `trainer_name`: name of the trainer
         `type`: the type of class
@@ -28,15 +28,18 @@ def get_classes(
         You can filter by type with the `type` query parameter.
 
         The `limit` and `offset` query parameters are used for pagination. 
-            The `limit` query parameter specifies the maximum number of results to return. 
+            The `limit` query parameter specifies the maximum number 
+            of results to return. 
             The `offset` query parameter specifies the
             number of results to skip before returning results.
 
         You can sort by date.
     """
-    stmt = sqlalchemy.text("""                            
-        SELECT classes.class_id, trainers.first_name as first, trainers.last_name as last,
-            class_types.type as type, date, COUNT(attendance) as num_dogs
+    stmt = sqlalchemy.text("""
+        SELECT classes.class_id, trainers.first_name as first, 
+            trainers.last_name as last,
+            class_types.type as type, date, 
+            COUNT(attendance) as num_dogs
         FROM classes
         LEFT JOIN trainers on trainers.trainer_id = classes.trainer_id
         LEFT JOIN attendance on attendance.class_id = classes.class_id
@@ -73,10 +76,15 @@ def delete_class(class_id: int):
     This endpoint deletes a class based on its class ID.
     """
     with db.engine.begin() as conn:
-        result = conn.execute(sqlalchemy.text("select class_id FROM classes where class_id = :id"), [{"id": class_id}])
+        result = conn.execute(sqlalchemy.text("""SELECT class_id 
+                                FROM classes where class_id = :id
+                                """), [{"id": class_id}])
         if result.fetchone() is None:
             raise HTTPException(status_code=404, detail="class not found.")
-        conn.execute(sqlalchemy.text("DELETE FROM classes where class_id = :id"), [{"id": class_id}])
+        conn.execute(sqlalchemy.text("""DELETE 
+                                     FROM classes 
+                                     where class_id = :id"""), 
+                                    [{"id": class_id}])
 
     return f"Class {class_id} deleted"
 
@@ -103,12 +111,15 @@ def get_class(class_id: int):
         `date`: the day the class takes place
         `start_time`: the time the class starts
         `end_time`: the time the class ends
-        `dogs_attended`: a a dictionary of a dog's id and name for the dogs that attended, 
+        `dogs_attended`: a a dictionary of a dog's id 
+                            and name for the dogs that attended, 
                             or null if the class has not taken place
     """
     stmt = sqlalchemy.text("""                            
-        SELECT classes.class_id, trainers.first_name as first, trainers.last_name as last,
-            class_types.type, class_types.description, date, start_time, end_time,
+        SELECT classes.class_id, trainers.first_name as first, 
+            trainers.last_name as last,
+            class_types.type, class_types.description, 
+            date, start_time, end_time,
             dogs.dog_id, dogs.dog_name
         FROM classes
         LEFT JOIN trainers on trainers.trainer_id = classes.trainer_id
