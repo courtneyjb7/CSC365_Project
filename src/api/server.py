@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from src.api import trainers, classes, dogs
+from src.api import trainers, classes, dogs, class_types
 
 description = """
 Dog Training and Boarding company
@@ -12,6 +12,10 @@ tags_metadata = [
     {
         "name": "trainers",
         "description": "Access information on trainers.",
+    },
+    {
+        "name": "class_types",
+        "description": "Access information on types of classes offered.",
     },
     {
         "name": "dogs",
@@ -33,6 +37,7 @@ app = FastAPI(
 )
 app.include_router(trainers.router)
 app.include_router(classes.router)
+app.include_router(class_types.router)
 app.include_router(dogs.router)
 
 
