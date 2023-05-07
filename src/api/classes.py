@@ -112,7 +112,7 @@ def add_classes(trainer_id: int, new_class: ClassJson):
 
         with db.engine.begin() as conn:
             # verify trainer_id is valid; will throw exception if not found
-            # TODO: not sure how to print out details from caught error when trainer_id invalid
+            # TODO: how to print out details from caught error when trainer_id invalid
             trainers.get_trainer(trainer_id)
 
             # query most recent class_id
