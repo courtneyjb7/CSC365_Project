@@ -151,11 +151,9 @@ def delete_class(class_id: int):
     This endpoint deletes a class based on its class ID.
     """
     with db.engine.begin() as conn:
-        result = conn.execute(sqlalchemy.text("""SELECT class_id 
-                                FROM classes where class_id = :id
-                                """), [{"id": class_id}])
-        if result.fetchone() is None:
-            raise HTTPException(status_code=404, detail="class not found.")
+        # check that class exists
+        get_class(class_id)
+
         conn.execute(sqlalchemy.text("""DELETE 
                                      FROM classes 
                                      where class_id = :id"""), 

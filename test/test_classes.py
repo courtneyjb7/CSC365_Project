@@ -32,5 +32,5 @@ def test_get_classes_1():
     response = client.get("/classes/?type=begin&limit=2&offset=0")
     assert response.status_code == 200
 
-    with open("test/classes/classes.json", encoding="utf-8") as f:
+    with open("test/classes/type=begin&limit=2&offset=0.json", encoding="utf-8") as f:
         assert response.json() == json.load(f)
