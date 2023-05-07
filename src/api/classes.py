@@ -1,10 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from enum import Enum
 from src import database as db
 from fastapi.params import Query
 from pydantic import BaseModel
 import sqlalchemy
-from datetime import date, time
 from src.api import class_types
 
 router = APIRouter()
@@ -21,7 +20,8 @@ def get_classes(
     sort: class_sort_options = class_sort_options.date
 ):
     """
-    This endpoint returns all the training classes in the database. For every class, it returns:
+    This endpoint returns all the training classes in the database. 
+    For every class, it returns:
         `class_id`: the id associated with the class
         `trainer_id`: the id of the trainer teaching the class
         `type`: the type of class
@@ -75,7 +75,7 @@ def add_classes(trainer_id: int, new_class: ClassJson):
             last_class_id = conn.execute(last_class_id_txt).fetchone()
 
             # calculate new class_id
-            new_class_id = last_class_id + 1
+            last_class_id + 1
 
             # get all class_types
             all_class_types = class_types.get_class_types()
@@ -83,17 +83,20 @@ def add_classes(trainer_id: int, new_class: ClassJson):
             ls_class_types = [info["type_id"] for info in all_class_types]
             print(ls_class_types)
             
-            # verify that new_class.class_type_id exists in the class_types; if not, throw error
+            # verify that new_class.class_type_id exists in the class_types; 
+            # if not, throw error
             # verify trainer_id is valid
             # verify data types
 
-            stm = sqlalchemy.text("""
-                INSERT INTO classes (class_id, trainer_id, date, start_time, end_type, class_type_id)
+            sqlalchemy.text("""
+                INSERT INTO classes 
+                (class_id, trainer_id, date, start_time, end_type, class_type_id)
                 VALUES (:class_id, :trainer_id, :start, :end:, :class_type)
             """)
 
-            # INSERT INTO classes (class_id, trainer_id, date, start_time, end_time, class_type_id) 
-                # VALUES (:class_id, :trainer_id, :c2, :movie_id)
+            # INSERT INTO classes 
+            # (class_id, trainer_id, date, start_time, end_time, class_type_id) 
+            # VALUES (:class_id, :trainer_id, :c2, :movie_id)
 
             # conn.execute(stm, [{"class_id": new_class_id, "trainer_id": trainer_id}])
         return None 

@@ -1,17 +1,14 @@
-from fastapi import APIRouter, HTTPException
-from enum import Enum
+from fastapi import APIRouter
 from src import database as db
-from fastapi.params import Query
-from pydantic import BaseModel
 import sqlalchemy
-from datetime import date, time
 
 router = APIRouter()
 
 @router.get("/class-types/", tags=["class_types"])
 def get_class_types():
     """
-    This endpoint returns all of the types of training classes in the database. For every type, it returns:
+    This endpoint returns all of the types of training classes in the database. 
+    For every type, it returns:
         `type_id`: the id associated with the class type
         `type`: the type of class
         `description`: a description of the class
