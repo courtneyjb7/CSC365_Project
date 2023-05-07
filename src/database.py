@@ -11,7 +11,7 @@ def try_parse(type, val):
     try:
         return type(val)
     except ValueError:
-        return None
+        raise Exception("Incorrect type")
 
 ## Postgres
 
