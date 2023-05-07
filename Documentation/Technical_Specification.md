@@ -29,7 +29,6 @@ This endpoint adds a new class to a trainer's schedule.
   `date`: the day the class takes place, of datatype DATE
   `start_time`: the time the class starts
   `end_time`: the time the class ends
-  `max_num_dogs`: the maximum amount of dogs that are allowed to attend
   `class_type_id`:the id of the type of class 
 ```
 GET /classes/
