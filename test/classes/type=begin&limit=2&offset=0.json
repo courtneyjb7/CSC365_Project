@@ -1,0 +1,16 @@
+[
+    {
+      "class_id": 1,
+      "trainer_name": "Veronica Guzman",
+      "type": "Beginner",
+      "date": "2023-05-03",
+      "num_of_dogs_attended": 2
+    },
+    {
+      "class_id": 4,
+      "trainer_name": "Veronica Guzman",
+      "type": "Beginner",
+      "date": "2022-10-20",
+      "num_of_dogs_attended": 0
+    }
+  ]

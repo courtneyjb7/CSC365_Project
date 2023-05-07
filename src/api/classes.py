@@ -130,7 +130,7 @@ def add_classes(trainer_id: int, new_class: ClassJson):
             sqlalchemy.text("""
                 INSERT INTO classes 
                 (class_id, trainer_id, date, start_time, end_type, class_type_id)
-                VALUES (:class_id, :trainer_id, :start, :end:, :class_type)
+                VALUES (:class_id, :trainer_id, :start, :end, :class_type)
             """)
 
             # INSERT INTO classes 
@@ -186,16 +186,15 @@ def get_class(class_id: int):
         `date`: the day the class takes place
         `start_time`: the time the class starts
         `end_time`: the time the class ends
-        `dogs_attended`: a a dictionary of a dog's id 
-                            and name for the dogs that attended, 
-                            or null if the class has not taken place
+        `dogs_attended`: a dictionary of a dog's id, name, and checkin time
+                            for the dogs that attended
     """
     stmt = sqlalchemy.text("""                            
         SELECT classes.class_id, trainers.first_name as first, 
             trainers.last_name as last,
             class_types.type, class_types.description, 
             date, start_time, end_time,
-            dogs.dog_id, dogs.dog_name
+            dogs.dog_id, dogs.dog_name, attendance.check_in
         FROM classes
         LEFT JOIN trainers on trainers.trainer_id = classes.trainer_id
         LEFT JOIN attendance on attendance.class_id = classes.class_id
@@ -226,7 +225,8 @@ def get_class(class_id: int):
                 json["dogs_attended"].append(
                     {
                         "dog_id": row.dog_id,
-                        "dog_name": row.dog_name
+                        "dog_name": row.dog_name,
+                        "check_in_time": row.check_in
                     }
                 )
     
