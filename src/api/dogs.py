@@ -7,40 +7,40 @@ import sqlalchemy
 router = APIRouter()
 
 
-@router.get("/dogs/{dog_id}", tags=["dogs"])
-def get_dog(dog_id: int):
-    """
-    This endpoint returns information about a dog in the database. For every dog, it returns:
-        `dog_id`: the id associated with the dog
-        `name`: the name of the dog
-        `client_email`: the email of the owner of the dog
-        `birthday`: the dog’s date of birth
-        `breed`: the dog’s breed
-        `trainer_comments`: a string of comments from the trainer about the dog’s progress (optional)
-    """
-    stmt = sqlalchemy.text("""                            
-            SELECT *
-            FROM dogs
-            WHERE dogs.dog_id = (:id)                        
-        """)
+# @router.get("/dogs/{dog_id}", tags=["dogs"])
+# def get_dog(dog_id: int):
+#     """
+#     This endpoint returns information about a dog in the database. For every dog, it returns:
+#         `dog_id`: the id associated with the dog
+#         `name`: the name of the dog
+#         `client_email`: the email of the owner of the dog
+#         `birthday`: the dog’s date of birth
+#         `breed`: the dog’s breed
+#         `trainer_comments`: a string of comments from the trainer about the dog’s progress (optional)
+#     """
+#     stmt = sqlalchemy.text("""                            
+#             SELECT *
+#             FROM dogs
+#             WHERE dogs.dog_id = (:id)                        
+#         """)
 
-    with db.engine.connect() as conn:
-        result = conn.execute(stmt, [{"id": dog_id}])
-        json = []
-        for row in result:
-            json.append(
-                {
-                    "dog_id": row.dog_id,
-                    "name": row.dog_name,
-                    "client_email": row.client_email, 
-                    "birthday": row.birthday,
-                    "breed": row.breed
-                }
-            )
-    if json != []:
-        return json
+#     with db.engine.connect() as conn:
+#         result = conn.execute(stmt, [{"id": dog_id}])
+#         json = []
+#         for row in result:
+#             json.append(
+#                 {
+#                     "dog_id": row.dog_id,
+#                     "name": row.dog_name,
+#                     "client_email": row.client_email, 
+#                     "birthday": row.birthday,
+#                     "breed": row.breed
+#                 }
+#             )
+#     if json != []:
+#         return json
     
-    raise HTTPException(status_code=404, detail="trainer not found.")
+#     raise HTTPException(status_code=404, detail="trainer not found.")
 
 @router.get("/dogs/{dog_id}", tags=["dogs"])
 def get_dog(dog_id: int):
@@ -85,7 +85,7 @@ def get_dog(dog_id: int):
         }
         if row1.comment_id is not None:
             for row in table:
-                json["dogs_attended"].append(
+                json["trainer_comments"].append(
                     {
                         "comment_id": row.comment_id,
                         "trainer": row.first_name + " " + row.last_name,
