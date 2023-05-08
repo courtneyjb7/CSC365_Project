@@ -1,0 +1,21 @@
+{
+    "dog_id": 1,
+    "name": "Roxy",
+    "client_email": "abc123@gmail.com",
+    "birthday": "2020-03-05",
+    "breed": "Labrador",
+    "trainer_comments": [
+        {
+            "comment_id": 1,
+            "trainer": "Veronica Guzman",
+            "time_added": "2023-05-03T17:00:00+00:00",
+            "text": "Lots of improvement"
+        },
+        {
+            "comment_id": 5,
+            "trainer": "Veronica Guzman",
+            "time_added": "2022-08-02T14:00:00+00:00",
+            "text": "Still barking"
+        }
+    ]
+}
