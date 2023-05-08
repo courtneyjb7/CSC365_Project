@@ -4,7 +4,7 @@ from fastapi.params import Query
 from pydantic import BaseModel
 import sqlalchemy
 import datetime
-from src.api import class_types, trainers
+from src.api import class_types, trainers, dogs
 
 router = APIRouter()
 
@@ -181,16 +181,116 @@ def delete_class(class_id: int):
 
     return f"Class {class_id} deleted"
 
+
+class AttendanceJson(BaseModel):
+    month: int
+    day: int
+    year: int
+    hour: int
+    minutes: int
+
+
 @router.put("/classes/{class_id}/{dog_id}/attendance", tags=["classes"])
-def add_attendance(trainer_id: int, classes: None):
+def add_attendance(class_id: int, dog_id: int, attd: AttendanceJson):
     """
     This endpoint adds a dog's attendance to a specific class.
         `attendance_id`: the id of the attendance record
         `dog_id`: the id of the dog attending
         `class_id`: the id of the class the dog is attending
         `check_in`: the timestamp the dog checked in, initialized to null
+            • "month": int representing month number of date
+            • "day": int representing day number of date
+            • "year": int representing year number of date
+            • "hour": int representing the hour dog was checked in
+            • "minutes": int representing the minutes dog was checked in
     """
-    return None
+
+    # TODO: should check_in be able to be null? like give a null value for month, 
+    # and all other fields
+
+    try:
+
+        with db.engine.begin() as conn:
+            # TODO: how to print out details from caught error 
+            # when dog_id or class_id invalid
+            
+            # verify that dog in db
+            # verify class in db
+            get_class(class_id)
+            dogs.get_dog(dog_id)
+
+            check_in = datetime.datetime(
+                    db.try_parse(int, attd.year),
+                    db.try_parse(int, attd.month),
+                    db.try_parse(int, attd.day),
+                    db.try_parse(int, attd.hour),
+                    db.try_parse(int, attd.minutes)
+                )
+
+            # does an attendance already exist for the dog_id in that class_id?
+            stm = sqlalchemy.text("""                            
+                SELECT *
+                FROM attendance
+                WHERE dog_id = :dog_id and class_id = :class_id           
+            """)
+
+            attendance = conn.execute(stm, [{
+                "dog_id": dog_id,
+                "class_id": class_id
+            }]).fetchone()
+
+
+            if attendance is not None:  # if yes, then update
+                stm = sqlalchemy.text("""                            
+                    UPDATE attendance
+                    SET check_in = :check_in
+                    WHERE dog_id = :dog_id 
+                    and class_id = :class_id 
+                    and attendance_id = :attendance_id     
+                """)
+
+                conn.execute(stm, [
+                    {
+                        "attendance_id": attendance[0], 
+                        "dog_id": dog_id,
+                        "class_id": class_id,
+                        "check_in": check_in,
+                    }
+                ])
+
+            else:   # if no, then insert, get last attendance id
+
+                last_attendance_id_txt = sqlalchemy.text("""                            
+                    SELECT attendance_id
+                    FROM attendance
+                    ORDER BY attendance_id DESC
+                    LIMIT 1            
+                """)
+
+                last_attendance_id = conn.execute(last_attendance_id_txt).fetchone()[0]
+
+                new_id = last_attendance_id + 1
+
+                stm = sqlalchemy.text("""
+                    INSERT INTO attendance 
+                    (attendance_id, dog_id, class_id, check_in)
+                    VALUES (:attendance_id, :dog_id, :class_id, :check_in)
+                """)
+
+                conn.execute(stm, [
+                    {
+                        "attendance_id": new_id, 
+                        "dog_id": dog_id,
+                        "class_id": class_id,
+                        "check_in": check_in,
+                    }
+                ])
+
+        return "Attendance updated"
+
+    except Exception as error:
+        print(f"Error returned: <<<{error}>>>")
+
 
 @router.get("/classes/{class_id}", tags=["classes"])
 def get_class(class_id: int):
