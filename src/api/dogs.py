@@ -3,6 +3,7 @@ from src import database as db
 import sqlalchemy
 from pydantic import BaseModel
 import datetime
+from fastapi.params import Query
 
 router = APIRouter()
 
@@ -128,7 +129,11 @@ def add_comments(dog_id: int, new_comment: CommentJson):
         print(f"Error returned: <<<{error}>>>")
 
 @router.get("/dogs/", tags=["dogs"])
-def get_dogs():
+def get_dogs(
+    name: str = "", 
+    limit: int = Query(50, ge=1, le=250),
+    offset: int = Query(0, ge=0)
+):
     """
     This endpoint returns all the dogs in the database. 
     For every dog, it returns:
@@ -138,11 +143,16 @@ def get_dogs():
 
     stmt = sqlalchemy.text("""                            
         SELECT *
-        FROM dogs             
+        FROM dogs 
+        WHERE dog_name ILIKE :name
+        OFFSET :offset         
+        LIMIT :limit            
     """)
 
     with db.engine.connect() as conn:
-        result = conn.execute(stmt)
+        result = conn.execute(stmt, [{"name": f"%{name}%",
+                                      "offset": offset,
+                                      "limit": limit}])
         json = []
         for row in result:
             json.append(

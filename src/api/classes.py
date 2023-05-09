@@ -113,15 +113,6 @@ def add_classes(trainer_id: int, new_class: ClassJson):
 
             new_class_id = last_class_id[0] + 1
 
-            # get all class_types
-            all_class_types = class_types.get_class_types()
-            ls_class_types = [info["type_id"] for info in all_class_types]
-            
-            # verify valid class_type_id
-            class_type_id = db.try_parse(int, new_class.class_type_id)
-            if class_type_id not in ls_class_types:
-                raise Exception("Invalid class_type_id")
-
             stm = sqlalchemy.text("""
                 INSERT INTO classes 
                 (class_id, trainer_id, date, start_time, end_time, class_type_id)
@@ -146,11 +137,14 @@ def add_classes(trainer_id: int, new_class: ClassJson):
                     "date": class_date,
                     "start": start_time,
                     "end": end_time,
-                    "class_type": class_type_id,
+                    "class_type": new_class.class_type_id,
                 }
             ])
 
-            return "Class added"
+            return new_class_id
+        
+    except IntegrityError:
+        print("Error returned: <<<foreign key violation>>>")
     
     except Exception as error:
         print(f"Error returned: <<<{error}>>>")
@@ -174,11 +168,11 @@ def delete_class(class_id: int):
 
 
 class AttendanceJson(BaseModel):
-    month: int or None
-    day: int or None
-    year: int or None
-    hour: int or None
-    minutes: int or None
+    month: int
+    day: int
+    year: int
+    hour: int
+    minutes: int
 
 
 @router.put("/classes/{class_id}/{dog_id}/attendance", tags=["classes"])
@@ -271,7 +265,7 @@ def add_attendance(class_id: int, dog_id: int, attd: AttendanceJson):
                     }
                 ])
 
-        return "Attendance updated"
+        return new_id
     
     except IntegrityError:
         print("Error returned: <<<foreign key violation>>>")
