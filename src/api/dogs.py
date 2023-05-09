@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException
 from src import database as db
 import sqlalchemy
 from pydantic import BaseModel
-from src.api import trainers
 import datetime
 
 router = APIRouter()
