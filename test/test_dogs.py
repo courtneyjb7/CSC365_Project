@@ -50,7 +50,7 @@ def test_error_post_comment():
         "minute": 0
     }
 
-    response = client.post(
+    client.post(
         "/dogs/0/comments/",
         json=comment
     ) 
