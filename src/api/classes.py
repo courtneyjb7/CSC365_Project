@@ -5,7 +5,7 @@ from pydantic import BaseModel
 import sqlalchemy
 from sqlalchemy.exc import IntegrityError
 import datetime
-from src.api import class_types, trainers, dogs
+from src.api import class_types
 
 router = APIRouter()
 
@@ -280,7 +280,7 @@ def add_attendance(class_id: int, dog_id: int, attd: AttendanceJson):
         return "Attendance updated"
     
     except IntegrityError:
-        print(f"Error returned: <<<foreign key violation>>>")
+        print("Error returned: <<<foreign key violation>>>")
 
     except Exception as error:
         print(f"Error returned: <<<{error}>>>")
