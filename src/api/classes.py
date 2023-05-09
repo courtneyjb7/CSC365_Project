@@ -5,7 +5,6 @@ from pydantic import BaseModel
 import sqlalchemy
 from sqlalchemy.exc import IntegrityError
 import datetime
-from src.api import class_types
 
 router = APIRouter()
 
