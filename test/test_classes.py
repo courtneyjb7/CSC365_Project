@@ -39,7 +39,7 @@ def test_add_classes():
                             })
     assert response.status_code == 200
 
-    assert response.text == '"Class added"'
+    assert response.text == '"Class added"' # return class_id
 
 
 # TODO: how to test put method
@@ -50,7 +50,7 @@ def test_add_classes():
 #                             {
 #                                 "month": 5,
 #                                 "day": 26,
-#                                 "year": 2024,
+#                                 "year": 2021,
 #                                 "start_hour": 12,
 #                                 "start_minutes": 30,
 #                                 "end_hour": 1,
@@ -68,7 +68,7 @@ def test_add_classes():
 #                             {
 #                                 "month": 5,
 #                                 "day": 26,
-#                                 "year": 2024,
+#                                 "year": 2021,
 #                                 "start_hour": 12,
 #                                 "start_minutes": 30,
 #                                 "end_hour": 1,
