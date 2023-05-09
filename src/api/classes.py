@@ -15,7 +15,7 @@ router = APIRouter()
 
 @router.get("/classes/", tags=["classes"])
 def get_classes(
-    type: str = "", #ca
+    type: str = "", 
     limit: int = Query(50, ge=1, le=250),
     offset: int = Query(0, ge=0)
     # sort: class_sort_options = class_sort_options.date
@@ -166,11 +166,9 @@ def delete_class(class_id: int):
     This endpoint deletes a class based on its class ID.
     """
     with db.engine.begin() as conn:
-        result = conn.execute(sqlalchemy.text("""SELECT class_id 
-                                FROM classes where class_id = :id
-                                """), [{"id": class_id}])
-        if result.fetchone() is None:
-            raise HTTPException(status_code=404, detail="class not found.")
+        # check that class exists
+        get_class(class_id)
+
         conn.execute(sqlalchemy.text("""DELETE 
                                      FROM classes 
                                      where class_id = :id"""), 
@@ -298,16 +296,15 @@ def get_class(class_id: int):
         `date`: the day the class takes place
         `start_time`: the time the class starts
         `end_time`: the time the class ends
-        `dogs_attended`: a a dictionary of a dog's id 
-                            and name for the dogs that attended, 
-                            or null if the class has not taken place
+        `dogs_attended`: a dictionary of a dog's id, name, and checkin time
+                            for the dogs that attended
     """
     stmt = sqlalchemy.text("""                            
         SELECT classes.class_id, trainers.first_name as first, 
             trainers.last_name as last,
             class_types.type, class_types.description, 
             date, start_time, end_time,
-            dogs.dog_id, dogs.dog_name
+            dogs.dog_id, dogs.dog_name, attendance.check_in
         FROM classes
         LEFT JOIN trainers on trainers.trainer_id = classes.trainer_id
         LEFT JOIN attendance on attendance.class_id = classes.class_id
@@ -338,7 +335,8 @@ def get_class(class_id: int):
                 json["dogs_attended"].append(
                     {
                         "dog_id": row.dog_id,
-                        "dog_name": row.dog_name
+                        "dog_name": row.dog_name,
+                        "check_in_time": row.check_in
                     }
                 )
     

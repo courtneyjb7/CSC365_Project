@@ -1,0 +1,51 @@
+[
+    {
+      "class_id": 0,
+      "trainer_name": "Courtney Barber",
+      "type": "Puppy Training",
+      "date": "2023-05-04",
+      "num_of_dogs_attended": 1
+    },
+    {
+      "class_id": 1,
+      "trainer_name": "Veronica Guzman",
+      "type": "Beginner",
+      "date": "2023-05-03",
+      "num_of_dogs_attended": 2
+    },
+    {
+      "class_id": 3,
+      "trainer_name": "Courtney Barber",
+      "type": "Puppy Training",
+      "date": "2023-04-01",
+      "num_of_dogs_attended": 0
+    },
+    {
+      "class_id": 2,
+      "trainer_name": "Courtney Barber",
+      "type": "Intermediate",
+      "date": "2023-01-01",
+      "num_of_dogs_attended": 0
+    },
+    {
+      "class_id": 7,
+      "trainer_name": "Veronica Guzman",
+      "type": "Advanced",
+      "date": "2022-12-10",
+      "num_of_dogs_attended": 0
+    },
+    {
+      "class_id": 4,
+      "trainer_name": "Veronica Guzman",
+      "type": "Beginner",
+      "date": "2022-10-20",
+      "num_of_dogs_attended": 0
+    },
+    {
+      "class_id": 5,
+      "trainer_name": "Veronica Guzman",
+      "type": "Advanced",
+      "date": "2022-08-10",
+      "num_of_dogs_attended": 0
+    }
+  ]
