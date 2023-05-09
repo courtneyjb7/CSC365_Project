@@ -50,9 +50,11 @@ def test_error_post_comment():
         "minute": 0
     }
 
-    response = client.post(
+    client.post(
         "/dogs/0/comments/",
         json=comment
     ) 
     
+def test_get_dog_400():
+    response = client.get("/dogs/-1")
     assert response.status_code == 404

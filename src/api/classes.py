@@ -3,6 +3,8 @@ from src import database as db
 from fastapi.params import Query
 from pydantic import BaseModel
 import sqlalchemy
+from sqlalchemy.exc import IntegrityError
+import datetime
 from src.api import class_types
 
 router = APIRouter()
@@ -72,9 +74,9 @@ def get_classes(
     return json
 
 class ClassJson(BaseModel):
-    month: str
-    day: str
-    year: str
+    month: int
+    day: int
+    year: int
     start_hour: int
     start_minutes: int
     end_hour: int
@@ -88,9 +90,9 @@ def add_classes(trainer_id: int, new_class: ClassJson):
     """
     This endpoint adds a new class to a trainer's schedule.
         `date`: the day the class takes place, given by the following three values:
-            • "month": string representing month of date
-            • "day": string representing day of date
-            • "year": string representing year of date
+            • "month": int representing month number of date
+            • "day": int representing day number of date
+            • "year": int representing year number of date
         `start_time`: the time the class starts, given by the following values:
             • "start_hour": int representing the hour of start_time
             • "start_minutes": int representing the minutes of start_time
@@ -113,36 +115,49 @@ def add_classes(trainer_id: int, new_class: ClassJson):
             # query most recent class_id
             last_class_id = conn.execute(last_class_id_txt).fetchone()
 
-            # calculate new class_id
-            last_class_id + 1
+            new_class_id = last_class_id[0] + 1
 
             # get all class_types
             all_class_types = class_types.get_class_types()
-
             ls_class_types = [info["type_id"] for info in all_class_types]
-            print(ls_class_types)
             
-            # verify that new_class.class_type_id exists in the class_types; 
-            # if not, throw error
-            # verify trainer_id is valid
-            # verify data types
+            # verify valid class_type_id
+            class_type_id = db.try_parse(int, new_class.class_type_id)
+            if class_type_id not in ls_class_types:
+                raise Exception("Invalid class_type_id")
 
-            sqlalchemy.text("""
+            stm = sqlalchemy.text("""
                 INSERT INTO classes 
-                (class_id, trainer_id, date, start_time, end_type, class_type_id)
-                VALUES (:class_id, :trainer_id, :start, :end, :class_type)
+                (class_id, trainer_id, date, start_time, end_time, class_type_id)
+                VALUES (:class_id, :trainer_id, :date, :start, :end, :class_type)
             """)
 
-            # INSERT INTO classes 
-            # (class_id, trainer_id, date, start_time, end_time, class_type_id) 
-            # VALUES (:class_id, :trainer_id, :c2, :movie_id)
+            # verify data types
+            class_date = datetime.date(db.try_parse(int, new_class.year),
+                                       db.try_parse(int, new_class.month),
+                                       db.try_parse(int, new_class.day))
+            
+            start_time = datetime.time(db.try_parse(int, new_class.start_hour),
+                                       db.try_parse(int, new_class.start_minutes))
+            
+            end_time = datetime.time(db.try_parse(int, new_class.end_hour),
+                                       db.try_parse(int, new_class.end_minutes))
 
-            # conn.execute(stm, [{"class_id": new_class_id, "trainer_id": trainer_id}])
-        return None 
+            conn.execute(stm, [
+                {
+                    "class_id": new_class_id, 
+                    "trainer_id": trainer_id,
+                    "date": class_date,
+                    "start": start_time,
+                    "end": end_time,
+                    "class_type": class_type_id,
+                }
+            ])
+
+            return "Class added"
     
     except Exception as error:
         print(f"Error returned: <<<{error}>>>")
-        #raise HTTPException(status_code=404, detail="movie not found.")
 
 
 @router.delete("/classes/{class_id}", tags=["classes"])
@@ -161,16 +176,113 @@ def delete_class(class_id: int):
 
     return f"Class {class_id} deleted"
 
+
+class AttendanceJson(BaseModel):
+    month: int
+    day: int
+    year: int
+    hour: int
+    minutes: int
+
+
 @router.put("/classes/{class_id}/{dog_id}/attendance", tags=["classes"])
-def add_attendance(trainer_id: int, classes: None):
+def add_attendance(class_id: int, dog_id: int, attd: AttendanceJson):
     """
     This endpoint adds a dog's attendance to a specific class.
         `attendance_id`: the id of the attendance record
         `dog_id`: the id of the dog attending
         `class_id`: the id of the class the dog is attending
         `check_in`: the timestamp the dog checked in, initialized to null
+            • "month": int representing month number of date
+            • "day": int representing day number of date
+            • "year": int representing year number of date
+            • "hour": int representing the hour dog was checked in
+            • "minutes": int representing the minutes dog was checked in
     """
-    return None
+
+    # TODO: should check_in be able to be null? like give a null value for month, 
+    # and all other fields
+
+    try:
+
+        with db.engine.begin() as conn:
+            # TODO: attendance entity and enrolled entity
+
+            check_in = datetime.datetime(
+                    db.try_parse(int, attd.year),
+                    db.try_parse(int, attd.month),
+                    db.try_parse(int, attd.day),
+                    db.try_parse(int, attd.hour),
+                    db.try_parse(int, attd.minutes)
+                )
+
+            # does an attendance already exist for the dog_id in that class_id?
+            stm = sqlalchemy.text("""                            
+                SELECT *
+                FROM attendance
+                WHERE dog_id = :dog_id and class_id = :class_id           
+            """)
+
+            attendance = conn.execute(stm, [{
+                "dog_id": dog_id,
+                "class_id": class_id
+            }]).fetchone()
+
+
+            if attendance is not None:  # if yes, then update
+                stm = sqlalchemy.text("""                            
+                    UPDATE attendance
+                    SET check_in = :check_in
+                    WHERE dog_id = :dog_id 
+                    and class_id = :class_id 
+                    and attendance_id = :attendance_id     
+                """)
+
+                conn.execute(stm, [
+                    {
+                        "attendance_id": attendance[0], 
+                        "dog_id": dog_id,
+                        "class_id": class_id,
+                        "check_in": check_in,
+                    }
+                ])
+
+            else:   # if no, then insert, get last attendance id
+
+                last_attendance_id_txt = sqlalchemy.text("""                            
+                    SELECT attendance_id
+                    FROM attendance
+                    ORDER BY attendance_id DESC
+                    LIMIT 1            
+                """)
+
+                last_attendance_id = conn.execute(last_attendance_id_txt).fetchone()[0]
+
+                new_id = last_attendance_id + 1
+
+                stm = sqlalchemy.text("""
+                    INSERT INTO attendance 
+                    (attendance_id, dog_id, class_id, check_in)
+                    VALUES (:attendance_id, :dog_id, :class_id, :check_in)
+                """)
+
+                conn.execute(stm, [
+                    {
+                        "attendance_id": new_id, 
+                        "dog_id": dog_id,
+                        "class_id": class_id,
+                        "check_in": check_in,
+                    }
+                ])
+
+        return "Attendance updated"
+    
+    except IntegrityError:
+        print("Error returned: <<<foreign key violation>>>")
+
+    except Exception as error:
+        print(f"Error returned: <<<{error}>>>")
+
 
 @router.get("/classes/{class_id}", tags=["classes"])
 def get_class(class_id: int):

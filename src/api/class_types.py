@@ -12,11 +12,10 @@ def get_class_types():
         `type_id`: the id associated with the class type
         `type`: the type of class
         `description`: a description of the class
+        `max_num_dogs`: number of dogs that can be in class type
     """
-    # TODO(vguzma08): Should we also return max_num_dogs? Or should we wait for v2?
-
     stmt = sqlalchemy.text("""                            
-        SELECT class_type_id, type, description
+        SELECT class_type_id, type, description, max_num_dogs
         FROM class_types              
     """)
 
@@ -29,7 +28,8 @@ def get_class_types():
                 {
                     "type_id": row.class_type_id,
                     "type": row.type,
-                    "description": row.description
+                    "description": row.description,
+                    "max_num_dogs": row.max_num_dogs,
                 }
             )
 
