@@ -3,6 +3,7 @@ from src import database as db
 from fastapi.params import Query
 from pydantic import BaseModel
 import sqlalchemy
+from sqlalchemy.exc import IntegrityError
 import datetime
 from src.api import class_types, trainers, dogs
 
@@ -111,10 +112,6 @@ def add_classes(trainer_id: int, new_class: ClassJson):
     try:
 
         with db.engine.begin() as conn:
-            # verify trainer_id is valid; will throw exception if not found
-            # TODO: how to print out details from caught error when trainer_id invalid
-            trainers.get_trainer(trainer_id)
-
             # query most recent class_id
             last_class_id = conn.execute(last_class_id_txt).fetchone()
 
@@ -213,11 +210,12 @@ def add_attendance(class_id: int, dog_id: int, attd: AttendanceJson):
         with db.engine.begin() as conn:
             # TODO: how to print out details from caught error 
             # when dog_id or class_id invalid
+            # TODO: attendance entity and enrolled entity
             
             # verify that dog in db
             # verify class in db
-            get_class(class_id)
-            dogs.get_dog(dog_id)
+            # get_class(class_id)
+            # dogs.get_dog(dog_id)
 
             check_in = datetime.datetime(
                     db.try_parse(int, attd.year),
@@ -287,6 +285,9 @@ def add_attendance(class_id: int, dog_id: int, attd: AttendanceJson):
                 ])
 
         return "Attendance updated"
+    
+    except IntegrityError:
+        print(f"Error returned: <<<foreign key violation>>>")
 
     except Exception as error:
         print(f"Error returned: <<<{error}>>>")
