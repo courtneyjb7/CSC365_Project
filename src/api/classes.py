@@ -79,8 +79,6 @@ class ClassJson(BaseModel):
     end_minutes: int
     class_type_id: int
 
-# TODO: update documentation! - technical specification
-
 @router.post("/classes/{trainer_id}", tags=["classes"])
 def add_classes(trainer_id: int, new_class: ClassJson):
     """
