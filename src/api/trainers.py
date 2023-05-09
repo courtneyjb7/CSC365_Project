@@ -39,29 +39,29 @@ def get_trainer(trainer_id: int):
     raise HTTPException(status_code=404, detail="trainer not found.")
 
 
-# @router.get("/trainers/", tags=["trainers"])
-# def get_trainers():
-#     """
-#     This endpoint returns all the trainers in the database. 
-#     For every trainer, it returns:
-#         `trainer_id`: the id associated with the trainer
-#         `name`: full name of the trainer
-#     """
+@router.get("/trainers/", tags=["trainers"])
+def get_trainers():
+    """
+    This endpoint returns all the trainers in the database. 
+    For every trainer, it returns:
+        `trainer_id`: the id associated with the trainer
+        `name`: full name of the trainer
+    """
 
-#     stmt = sqlalchemy.text("""                            
-#         SELECT *
-#         FROM trainers             
-#     """)
+    stmt = sqlalchemy.text("""                            
+        SELECT *
+        FROM trainers             
+    """)
 
-#     with db.engine.connect() as conn:
-#         result = conn.execute(stmt)
-#         json = []
-#         for row in result:
-#             json.append(
-#                 {
-#                     "trainer_id": row.trainer_id,
-#                     "name": row.first_name + row.last_name 
-#                 }
-#             )
+    with db.engine.connect() as conn:
+        result = conn.execute(stmt)
+        json = []
+        for row in result:
+            json.append(
+                {
+                    "trainer_id": row.trainer_id,
+                    "name": row.first_name + row.last_name 
+                }
+            )
 
-#     return json
+    return json

@@ -93,67 +93,64 @@ def add_comments(dog_id: int, new_comment: CommentJson):
         LIMIT 1            
     """)
 
-    # try:
+    try:
 
-    with db.engine.begin() as conn:
-        # query most recent comment_id
-        last_comment_id = conn.execute(last_comment_id_txt).fetchone()[0]
-        # calculate new comment_id
-        comment_id = last_comment_id + 1
+        with db.engine.begin() as conn:
+            # query most recent comment_id
+            last_comment_id = conn.execute(last_comment_id_txt).fetchone()[0]
+            # calculate new comment_id
+            comment_id = last_comment_id + 1
+        
+            datetime_added = datetime.datetime(db.try_parse(int, new_comment.year),
+                                        db.try_parse(int, new_comment.month),
+                                        db.try_parse(int, new_comment.day),
+                                        db.try_parse(int, new_comment.hour),
+                                        db.try_parse(int, new_comment.minute))
+        
 
-        # chek that dog and trainer exist
-        get_dog(dog_id)
-        trainers.get_trainer(new_comment.trainer_id)
-        datetime_added = datetime.datetime(db.try_parse(int, new_comment.year),
-                                    db.try_parse(int, new_comment.month),
-                                    db.try_parse(int, new_comment.day),
-                                    db.try_parse(int, new_comment.hour),
-                                    db.try_parse(int, new_comment.minute))
+            stmt = sqlalchemy.text("""
+                INSERT INTO comments
+                (comment_id, dog_id, trainer_id, comment_text, time_added)
+                VALUES (:comment_id, :dog_id, :trainer_id, :text, :time)
+            """)
+
+
+            conn.execute(stmt, [{
+                "comment_id": comment_id,
+                "dog_id": dog_id,
+                "trainer_id": new_comment.trainer_id, 
+                "text": new_comment.comment_text,
+                "time": datetime_added
+            }])
+
+        return comment_id 
     
+    except Exception as error:
+        print(f"Error returned: <<<{error}>>>")
 
-        stmt = sqlalchemy.text("""
-            INSERT INTO comments
-            (comment_id, dog_id, trainer_id, comment_text, time_added)
-            VALUES (:comment_id, :dog_id, :trainer_id, :text, :time)
-        """)
+@router.get("/dogs/", tags=["dogs"])
+def get_dogs():
+    """
+    This endpoint returns all the dogs in the database. 
+    For every dog, it returns:
+        `dog_id`: the id associated with the dog
+        `dog_name`: the name of the  dog
+    """
 
+    stmt = sqlalchemy.text("""                            
+        SELECT *
+        FROM dogs             
+    """)
 
-        conn.execute(stmt, [{
-            "comment_id": comment_id,
-            "dog_id": dog_id,
-            "trainer_id": new_comment.trainer_id, 
-            "text": new_comment.comment_text,
-            "time": datetime_added
-        }])
+    with db.engine.connect() as conn:
+        result = conn.execute(stmt)
+        json = []
+        for row in result:
+            json.append(
+                {
+                    "dog_id": row.dog_id,
+                    "name": row.dog_name 
+                }
+            )
 
-    return comment_id 
-    
-    # except Exception as error:
-    #     print(f"Error returned: <<<{error}>>>")
-
-# @router.get("/dogs/", tags=["dogs"])
-# def get_dogs():
-#     """
-#     This endpoint returns all the dogs in the database. 
-#     For every dog, it returns:
-#         `dog_id`: the id associated with the dog
-#         `dog_name`: the name of the  dog
-#     """
-
-#     stmt = sqlalchemy.text("""                            
-#         SELECT *
-#         FROM dogs             
-#     """)
-
-#     with db.engine.connect() as conn:
-#         result = conn.execute(stmt)
-#         json = []
-#         for row in result:
-#             json.append(
-#                 {
-#                     "dog_id": row.dog_id,
-#                     "name": row.dog_name 
-#                 }
-#             )
-
-#     return json
+    return json

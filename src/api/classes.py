@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.get("/classes/", tags=["classes"])
 def get_classes(
-    type: str = "", #ca
+    type: str = "", 
     limit: int = Query(50, ge=1, le=250),
     offset: int = Query(0, ge=0)
     # sort: class_sort_options = class_sort_options.date

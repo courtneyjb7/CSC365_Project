@@ -44,4 +44,4 @@ app.include_router(dogs.router)
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Dog Trainer API. \
-            See /docs for more information."}
+See /docs for more information."}
