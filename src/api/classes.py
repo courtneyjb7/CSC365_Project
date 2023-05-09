@@ -208,14 +208,7 @@ def add_attendance(class_id: int, dog_id: int, attd: AttendanceJson):
     try:
 
         with db.engine.begin() as conn:
-            # TODO: how to print out details from caught error 
-            # when dog_id or class_id invalid
             # TODO: attendance entity and enrolled entity
-            
-            # verify that dog in db
-            # verify class in db
-            # get_class(class_id)
-            # dogs.get_dog(dog_id)
 
             check_in = datetime.datetime(
                     db.try_parse(int, attd.year),
