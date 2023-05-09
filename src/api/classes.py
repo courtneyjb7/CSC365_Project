@@ -9,16 +9,12 @@ from src.api import class_types
 
 router = APIRouter()
 
-# class class_sort_options(str, Enum):
-#     type = "type"
-#     date = "date"
 
 @router.get("/classes/", tags=["classes"])
 def get_classes(
     type: str = "", 
     limit: int = Query(50, ge=1, le=250),
     offset: int = Query(0, ge=0)
-    # sort: class_sort_options = class_sort_options.date
 ):
     """
     This endpoint returns all the training classes in the database. 
@@ -37,7 +33,7 @@ def get_classes(
             The `offset` query parameter specifies the
             number of results to skip before returning results.
 
-        You can sort by date.
+        Classes are sorted by date in descending order.
     """
     stmt = sqlalchemy.text("""
         SELECT classes.class_id, trainers.first_name as first, 
@@ -178,11 +174,11 @@ def delete_class(class_id: int):
 
 
 class AttendanceJson(BaseModel):
-    month: int
-    day: int
-    year: int
-    hour: int
-    minutes: int
+    month: int or None
+    day: int or None
+    year: int or None
+    hour: int or None
+    minutes: int or None
 
 
 @router.put("/classes/{class_id}/{dog_id}/attendance", tags=["classes"])
@@ -192,7 +188,7 @@ def add_attendance(class_id: int, dog_id: int, attd: AttendanceJson):
         `attendance_id`: the id of the attendance record
         `dog_id`: the id of the dog attending
         `class_id`: the id of the class the dog is attending
-        `check_in`: the timestamp the dog checked in, initialized to null
+        `check_in`: the timestamp the dog checked in
             • "month": int representing month number of date
             • "day": int representing day number of date
             • "year": int representing year number of date

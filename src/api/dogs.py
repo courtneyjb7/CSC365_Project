@@ -18,7 +18,7 @@ def get_dog(dog_id: int):
         `birthday`: the dog's date of birth
         `breed`: the dog's breed
         `trainer_comments`: a list of comments from the 
-            trainer about the dog's progress (optional)
+            trainer about the dog's progress 
 
             Each comment returns:
                 `comment_id`: the id of the comment
@@ -133,7 +133,7 @@ def get_dogs():
     This endpoint returns all the dogs in the database. 
     For every dog, it returns:
         `dog_id`: the id associated with the dog
-        `dog_name`: the name of the  dog
+        `dog_name`: the name of the dog
     """
 
     stmt = sqlalchemy.text("""                            
