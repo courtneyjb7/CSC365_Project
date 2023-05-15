@@ -18,21 +18,15 @@ def get_classes(
     """
     This endpoint returns all the training classes in the database. 
     For every class, it returns:
-        `class_id`: the id associated with the class
-        `trainer_name`: name of the trainer
-        `type`: the type of class
-        `date`: the date the class take places
-        `num_of_dogs_attended`: the number of dogs attending the class
+    - `class_id`: the id associated with the class
+    - `trainer_name`: name of the trainer
+    - `type`: the type of class
+    - `date`: the date the class take places
+    - `num_of_dogs_attended`: the number of dogs attending the class
 
-        You can filter by type with the `type` query parameter.
+    You can filter by type with the `type` query parameter.
 
-        The `limit` and `offset` query parameters are used for pagination. 
-            The `limit` query parameter specifies the maximum number 
-            of results to return. 
-            The `offset` query parameter specifies the
-            number of results to skip before returning results.
-
-        Classes are sorted by date in descending order.
+    Classes are sorted by date in descending order.
     """
     stmt = sqlalchemy.text("""
         SELECT classes.class_id, trainers.first_name as first, 
