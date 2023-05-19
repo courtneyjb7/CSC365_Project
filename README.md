@@ -10,6 +10,3 @@ For our project, we will create a database that contains information for a Dog T
 
 [ER Diagram](ER_Dog_Trainer_Diagram.pdf)
 
-## V2 Implementations
-    • create end point that returns all dogs in database
-    • create new table/entity for dogs_enrolled (keep track of the classes a dog is enrolled in)

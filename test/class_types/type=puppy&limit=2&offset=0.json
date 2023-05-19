@@ -1,0 +1,8 @@
+[
+    {
+      "type_id": 0,
+      "type": "Puppy Training",
+      "description": "Potty training, puppy biting, barking, and basic commands will be covered.",
+      "max_num_dogs": 10
+    }
+]

@@ -5,39 +5,28 @@ from pydantic import BaseModel
 import sqlalchemy
 from sqlalchemy.exc import IntegrityError
 import datetime
-from src.api import class_types
 
 router = APIRouter()
 
-# class class_sort_options(str, Enum):
-#     type = "type"
-#     date = "date"
 
 @router.get("/classes/", tags=["classes"])
 def get_classes(
     type: str = "", 
     limit: int = Query(50, ge=1, le=250),
     offset: int = Query(0, ge=0)
-    # sort: class_sort_options = class_sort_options.date
 ):
     """
     This endpoint returns all the training classes in the database. 
     For every class, it returns:
-        `class_id`: the id associated with the class
-        `trainer_name`: name of the trainer
-        `type`: the type of class
-        `date`: the date the class take places
-        `num_of_dogs_attended`: the number of dogs attending the class
+    - `class_id`: the id associated with the class
+    - `trainer_name`: name of the trainer
+    - `type`: the type of class
+    - `date`: the date the class take places
+    - `num_of_dogs_attended`: the number of dogs attending the class
 
-        You can filter by type with the `type` query parameter.
+    You can filter by type with the `type` query parameter.
 
-        The `limit` and `offset` query parameters are used for pagination. 
-            The `limit` query parameter specifies the maximum number 
-            of results to return. 
-            The `offset` query parameter specifies the
-            number of results to skip before returning results.
-
-        You can sort by date.
+    Classes are sorted by date in descending order.
     """
     stmt = sqlalchemy.text("""
         SELECT classes.class_id, trainers.first_name as first, 
@@ -83,8 +72,6 @@ class ClassJson(BaseModel):
     end_minutes: int
     class_type_id: int
 
-# TODO: update documentation! - technical specification
-
 @router.post("/classes/{trainer_id}", tags=["classes"])
 def add_classes(trainer_id: int, new_class: ClassJson):
     """
@@ -117,15 +104,6 @@ def add_classes(trainer_id: int, new_class: ClassJson):
 
             new_class_id = last_class_id[0] + 1
 
-            # get all class_types
-            all_class_types = class_types.get_class_types()
-            ls_class_types = [info["type_id"] for info in all_class_types]
-            
-            # verify valid class_type_id
-            class_type_id = db.try_parse(int, new_class.class_type_id)
-            if class_type_id not in ls_class_types:
-                raise Exception("Invalid class_type_id")
-
             stm = sqlalchemy.text("""
                 INSERT INTO classes 
                 (class_id, trainer_id, date, start_time, end_time, class_type_id)
@@ -150,11 +128,14 @@ def add_classes(trainer_id: int, new_class: ClassJson):
                     "date": class_date,
                     "start": start_time,
                     "end": end_time,
-                    "class_type": class_type_id,
+                    "class_type": new_class.class_type_id,
                 }
             ])
 
-            return "Class added"
+            return new_class_id
+        
+    except IntegrityError:
+        print("Error returned: <<<foreign key violation>>>")
     
     except Exception as error:
         print(f"Error returned: <<<{error}>>>")
@@ -192,7 +173,7 @@ def add_attendance(class_id: int, dog_id: int, attd: AttendanceJson):
         `attendance_id`: the id of the attendance record
         `dog_id`: the id of the dog attending
         `class_id`: the id of the class the dog is attending
-        `check_in`: the timestamp the dog checked in, initialized to null
+        `check_in`: the timestamp the dog checked in
             • "month": int representing month number of date
             • "day": int representing day number of date
             • "year": int representing year number of date
@@ -275,7 +256,7 @@ def add_attendance(class_id: int, dog_id: int, attd: AttendanceJson):
                     }
                 ])
 
-        return "Attendance updated"
+        return new_id
     
     except IntegrityError:
         print("Error returned: <<<foreign key violation>>>")
