@@ -21,8 +21,10 @@ def upgrade() -> None:
         'attendance',
         sa.Column('attendance_id', sa.Integer, primary_key=True),
         sa.Column('dog_id', sa.Integer, sa.ForeignKey('dogs.dog_id'), nullable=False),
-        sa.Column('class_id', sa.Integer, sa.ForeignKey('classes.class_id'), nullable=False),
-        sa.Column('check_in', sa.TIMESTAMP, server_default=sa.text('NOW()'), nullable=False) 
+        sa.Column('class_id', sa.Integer, 
+                  sa.ForeignKey('classes.class_id'), nullable=False),
+        sa.Column('check_in', sa.TIMESTAMP, 
+                  server_default=sa.text('NOW()'), nullable=False) 
     )
 
 

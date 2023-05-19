@@ -17,7 +17,8 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column('classes', sa.Column('class_type_id', sa.Integer, sa.ForeignKey('class_types.class_type_id')))
+    op.add_column('classes', sa.Column('class_type_id', sa.Integer, 
+                                       sa.ForeignKey('class_types.class_type_id')))
 
 
 def downgrade() -> None:
