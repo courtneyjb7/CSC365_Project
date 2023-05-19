@@ -24,7 +24,7 @@ tags_metadata = [
 ]
 
 app = FastAPI(
-    title="Movie API",
+    title="Dog Trainer API",
     description=description,
     version="0.0.1",
     contact={

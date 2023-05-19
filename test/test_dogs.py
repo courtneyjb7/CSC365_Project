@@ -6,6 +6,19 @@ import json
 
 client = TestClient(app)
 
+def test_get_dogs():
+    response = client.get("/dogs/")
+    assert response.status_code == 200
+
+    with open("test/dogs/root.json", encoding="utf-8") as f:
+        assert response.json() == json.load(f)
+
+def test_get_dogs_2():
+    response = client.get("/dogs/?limit=1&offset=1")
+    assert response.status_code == 200
+
+    with open("test/dogs/limit=1&offset=1.json", encoding="utf-8") as f:
+        assert response.json() == json.load(f)
 
 def test_get_dog_1():
     response = client.get("/dogs/1")
@@ -55,6 +68,6 @@ def test_error_post_comment():
         json=comment
     ) 
     
-def test_get_dog_400():
+def test_get_dog_404():
     response = client.get("/dogs/-1")
     assert response.status_code == 404

@@ -20,3 +20,10 @@ def test_get_trainer_1():
 
     with open("test/trainers/1.json", encoding="utf-8") as f:
         assert response.json() == json.load(f)
+
+def test_get_trainers():
+    response = client.get("/trainers/")
+    assert response.status_code == 200
+
+    with open("test/trainers/root.json", encoding="utf-8") as f:
+        assert response.json() == json.load(f)
