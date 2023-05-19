@@ -13,7 +13,6 @@ def try_parse(type, val):
         raise Exception("Incorrect type")
 
 ## Postgres
-
 def database_connection_url():
     dotenv.load_dotenv()
     DB_USER: str = os.environ.get("POSTGRES_USER")
