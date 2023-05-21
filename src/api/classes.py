@@ -8,10 +8,9 @@ import datetime
 
 router = APIRouter()
 
-
+# TODO: filter by type, if given a type as an integer
 @router.get("/classes/", tags=["classes"])
 def get_classes(
-    type: str = "", 
     limit: int = Query(50, ge=1, le=250),
     offset: int = Query(0, ge=0)
 ):
@@ -40,17 +39,15 @@ def get_classes(
         LEFT JOIN trainers on trainers.trainer_id = classes.trainer_id
         LEFT JOIN attendance on attendance.class_id = classes.class_id
         LEFT JOIN class_types on class_types.class_type_id = classes.class_type_id
-        WHERE type ILIKE :type
         GROUP BY classes.class_id, first_name, last_name, 
                 class_types.type, trainers.trainer_id
         ORDER BY date DESC, classes.class_id  
         OFFSET :offset         
         LIMIT :limit              
     """)
-
+    
     with db.engine.connect() as conn:
-        result = conn.execute(stmt, [{"type": f"%{type}%",
-                                      "offset": offset,
+        result = conn.execute(stmt, [{"offset": offset,
                                       "limit": limit}])
         json = []
         for row in result:
@@ -68,6 +65,7 @@ def get_classes(
     return json
 
 class ClassJson(BaseModel):
+    trainer_id: int
     month: int
     day: int
     year: int
@@ -77,10 +75,11 @@ class ClassJson(BaseModel):
     end_minutes: int
     class_type_id: int
 
-@router.post("/classes/{trainer_id}", tags=["classes"])
-def add_classes(trainer_id: int, new_class: ClassJson):
+@router.post("/classes/", tags=["classes"])
+def add_classes(new_class: ClassJson):
     """
     This endpoint adds a new class to a trainer's schedule.
+    - `trainer_id`: id of the trainer teaching the class
     - `date`: the day the class takes place, given by the following three values:
         - "month": int representing month number of date
         - "day": int representing day number of date
@@ -129,7 +128,7 @@ def add_classes(trainer_id: int, new_class: ClassJson):
             conn.execute(stm, [
                 {
                     "class_id": new_class_id, 
-                    "trainer_id": trainer_id,
+                    "trainer_id": new_class.trainer_id,
                     "date": class_date,
                     "start": start_time,
                     "end": end_time,
@@ -164,6 +163,7 @@ def delete_class(class_id: int):
 
 
 class AttendanceJson(BaseModel):
+    dog_id: int
     month: int
     day: int
     year: int
@@ -171,8 +171,8 @@ class AttendanceJson(BaseModel):
     minutes: int
 
 
-@router.put("/classes/{class_id}/{dog_id}/attendance", tags=["classes"])
-def add_attendance(class_id: int, dog_id: int, attd: AttendanceJson):
+@router.put("/classes/{class_id}/attendance", tags=["classes"])
+def add_attendance(class_id: int, attd: AttendanceJson):
     """
     This endpoint adds a dog's attendance to a specific class.
     - `attendance_id`: the id of the attendance record
@@ -210,7 +210,7 @@ def add_attendance(class_id: int, dog_id: int, attd: AttendanceJson):
             """)
 
             attendance = conn.execute(stm, [{
-                "dog_id": dog_id,
+                "dog_id": attd.dog_id,
                 "class_id": class_id
             }]).fetchone()
 
@@ -227,7 +227,7 @@ def add_attendance(class_id: int, dog_id: int, attd: AttendanceJson):
                 conn.execute(stm, [
                     {
                         "attendance_id": attendance[0], 
-                        "dog_id": dog_id,
+                        "dog_id": attd.dog_id,
                         "class_id": class_id,
                         "check_in": check_in,
                     }
@@ -255,7 +255,7 @@ def add_attendance(class_id: int, dog_id: int, attd: AttendanceJson):
                 conn.execute(stm, [
                     {
                         "attendance_id": new_id, 
-                        "dog_id": dog_id,
+                        "dog_id": attd.dog_id,
                         "class_id": class_id,
                         "check_in": check_in,
                     }

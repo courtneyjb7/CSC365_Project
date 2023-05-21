@@ -83,7 +83,7 @@ def get_trainers():
             json.append(
                 {
                     "trainer_id": row.trainer_id,
-                    "name": row.first_name + row.last_name 
+                    "name": row.first_name + " " + row.last_name 
                 }
             )
 
