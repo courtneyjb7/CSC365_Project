@@ -2,31 +2,77 @@ from fastapi import APIRouter, HTTPException
 from src import database as db
 import sqlalchemy
 from fastapi.params import Query
+from pydantic import BaseModel
 
 router = APIRouter()
 
-# @router.get("/trainers/", tags=["trainers"])
-# def get_trainer(trainer_id: int):
-#     """
-#     This endpoint can return and update a trainer by its identifiers. 
-#     For each trainer, it returns:
-#     - `trainer_id`: the id associated with the trainer
-#     - `first`: first name of the trainer
-#     - `last`: last name of the trainer
-#     - `email`: the company email of the trainer
-#     """
+class TrainerJson(BaseModel):
+    first_name: str
+    last_name: str
+    email: str
+    password: str
+
+@router.post("/trainers/", tags=["trainers"])
+def add_trainer(trainer: TrainerJson):
+    """
+    This endpoint adds a new trainer to the database. 
+    - `first_name`: first name of the trainer
+    - `last_name`: last name of the trainer
+    - `email`: the company email of the trainer
+    - `password`: the trainer's password. Password should be 6 characters or more.
+    """
+    if len(trainer.password) < 6:
+        raise HTTPException(status_code=400, detail="password must be 6 or more characters.")
+    try:
+        with db.engine.begin() as conn:
+            stm = sqlalchemy.text("""
+                INSERT INTO trainers 
+                (first_name, last_name, email, password) 
+                VALUES (
+                    :first,
+                    :last,
+                    :email,
+                    crypt(:pwd, gen_salt('bf'))
+                )
+            """)
+            conn.execute(stm, [
+                {
+                    "first": trainer.first_name,
+                    "last": trainer.last_name,
+                    "email": trainer.email,
+                    "pwd": trainer.password
+                }
+            ])
+
+            return "success"
+    except Exception as error:
+        print(f"Error returned: <<<{error}>>>")
 
 
-# @router.get("/trainers/{trainer_id}", tags=["trainers"])
-# def get_trainer(trainer_id: int):
-#     """
-#     This endpoint can return and update a trainer by its identifiers. 
-#     For each trainer, it returns:
-#     - `trainer_id`: the id associated with the trainer
-#     - `first`: first name of the trainer
-#     - `last`: last name of the trainer
-#     - `email`: the company email of the trainer
-#     """
+@router.get("/trainers/{trainer_email}/{pwd}", tags=["trainers"])
+def verify_password(trainer_email: str, pwd: str):
+    """
+    This endpoint verifies the login credentials for a trainer. 
+    - `trainer_email`: the email associated with the trainer
+    - `pwd`: trainer's password
+    """
+
+    check_valid = sqlalchemy.text(
+                    """SELECT trainer_id 
+                        FROM trainers
+                        WHERE email = :email 
+                        AND password = crypt(:pwd, password)""")
+    
+    with db.engine.begin() as conn:
+        result = conn.execute(check_valid, [
+            {"email": trainer_email,
+             "pwd": pwd}
+             ]).one_or_none()
+        
+        if result is None:
+            raise HTTPException(status_code=404, detail="credentials not found")
+        else:
+            return result.trainer_id
 
 
 @router.get("/trainers/{trainer_id}", tags=["trainers"])
