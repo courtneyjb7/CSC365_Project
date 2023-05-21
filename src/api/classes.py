@@ -19,6 +19,7 @@ def get_classes(
     This endpoint returns all the training classes in the database. 
     For every class, it returns:
     - `class_id`: the id associated with the class
+    - `trainer_id: the id of the trainer
     - `trainer_name`: name of the trainer
     - `type`: the type of class
     - `date`: the date the class take places
@@ -33,13 +34,14 @@ def get_classes(
         SELECT classes.class_id, trainers.first_name as first, 
             trainers.last_name as last,
             class_types.type as type, date, 
-            COUNT(attendance) as num_dogs
+            COUNT(attendance) as num_dogs,
+            trainers.trainer_id as trainer_id
         FROM classes
         LEFT JOIN trainers on trainers.trainer_id = classes.trainer_id
         LEFT JOIN attendance on attendance.class_id = classes.class_id
         LEFT JOIN class_types on class_types.class_type_id = classes.class_type_id
         WHERE type ILIKE :type
-        GROUP BY classes.class_id, first_name, last_name, class_types.type
+        GROUP BY classes.class_id, first_name, last_name, class_types.type, trainers.trainer_id
         ORDER BY date DESC, classes.class_id  
         OFFSET :offset         
         LIMIT :limit              
@@ -54,6 +56,7 @@ def get_classes(
             json.append(
                 {
                     "class_id": row.class_id,
+                    "trainer_id": row.trainer_id,
                     "trainer_name": row.first + " " + row.last,
                     "type": row.type,
                     "date": row.date,
@@ -273,8 +276,9 @@ def get_class(class_id: int):
     - `class_id`: the id associated with the trainer
     - `type`: the type of the class
     - `description`: description of the class
-    - `trainer_first_name`: the first name of the trainer teaching the class
-    - `trainer_last_name`: the first name of the trainer teaching the class
+    - `trainer_id`: the id of the trainer teaching the class
+    - `trainer_first_name`: the first name of the trainer 
+    - `trainer_last_name`: the first name of the trainer 
     - `date`: the day the class takes place
     - `start_time`: the time the class starts
     - `end_time`: the time the class ends
@@ -286,7 +290,8 @@ def get_class(class_id: int):
             trainers.last_name as last,
             class_types.type, class_types.description, 
             date, start_time, end_time,
-            dogs.dog_id, dogs.dog_name, attendance.check_in
+            dogs.dog_id, dogs.dog_name, attendance.check_in,
+            trainers.trainer_id as trainer_id
         FROM classes
         LEFT JOIN trainers on trainers.trainer_id = classes.trainer_id
         LEFT JOIN attendance on attendance.class_id = classes.class_id
@@ -304,6 +309,7 @@ def get_class(class_id: int):
         row1 = table[0]
         json = {
             "class_id": row1.class_id,
+            "trainer_id": row1.trainer_id,
             "trainer_first_name": row1.first,
             "trainer_last_name": row1.last,
             "type": row1.type,
