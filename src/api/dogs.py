@@ -13,19 +13,19 @@ def get_dog(dog_id: int):
     """
     This endpoint returns information about a dog in the database. 
     For every dog, it returns:
-        `dog_id`: the id associated with the dog
-        `name`: the name of the dog
-        `client_email`: the email of the owner of the dog
-        `birthday`: the dog's date of birth
-        `breed`: the dog's breed
-        `trainer_comments`: a list of comments from the 
+    - `dog_id`: the id associated with the dog
+    - `name`: the name of the dog
+    - `client_email`: the email of the owner of the dog
+    - `birthday`: the dog's date of birth
+    - `breed`: the dog's breed
+    - `trainer_comments`: a list of comments from the 
             trainer about the dog's progress 
 
-            Each comment returns:
-                `comment_id`: the id of the comment
-                `trainer`: the name of the trainer who wrote the comment
-                `time_added`: the day and time the comment was made
-                `text`: the comment text
+    Each comment returns:
+    - `comment_id`: the id of the comment
+    - `trainer`: the name of the trainer who wrote the comment
+    - `time_added`: the day and time the comment was made
+    - `text`: the comment text
 
     """
     stmt = sqlalchemy.text("""                            
@@ -79,11 +79,11 @@ class CommentJson(BaseModel):
 def add_comments(dog_id: int, new_comment: CommentJson):
     """
     This endpoint updates trainer comments for a dog. 
-        `comment_id`: the id of the comment
-        `dog_id`: the id of the dog the comment is about
-        `trainer_id`: the id of the trainer who made the comment
-        `comment_text`: a string from the trainer about the dog's progress
-        `time_added`: the time and date the comment was made        
+    - `comment_id`: the id of the comment
+    - `dog_id`: the id of the dog the comment is about
+    - `trainer_id`: the id of the trainer who made the comment
+    - `comment_text`: a string from the trainer about the dog's progress
+    - `time_added`: the time and date the comment was made        
     """
 
     last_comment_id_txt = sqlalchemy.text("""                            
@@ -137,8 +137,8 @@ def get_dogs(
     """
     This endpoint returns all the dogs in the database. 
     For every dog, it returns:
-        `dog_id`: the id associated with the dog
-        `dog_name`: the name of the dog
+    - `dog_id`: the id associated with the dog
+    - `dog_name`: the name of the dog
     """
 
     stmt = sqlalchemy.text("""                            

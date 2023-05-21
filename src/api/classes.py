@@ -19,12 +19,14 @@ def get_classes(
     This endpoint returns all the training classes in the database. 
     For every class, it returns:
     - `class_id`: the id associated with the class
+    - `trainer_id: the id of the trainer
     - `trainer_name`: name of the trainer
     - `type`: the type of class
     - `date`: the date the class take places
     - `num_of_dogs_attended`: the number of dogs attending the class
 
     You can filter by type with the `type` query parameter.
+    You can `limit` and `offset` the results. 
 
     Classes are sorted by date in descending order.
     """
@@ -32,13 +34,15 @@ def get_classes(
         SELECT classes.class_id, trainers.first_name as first, 
             trainers.last_name as last,
             class_types.type as type, date, 
-            COUNT(attendance) as num_dogs
+            COUNT(attendance) as num_dogs,
+            trainers.trainer_id as trainer_id
         FROM classes
         LEFT JOIN trainers on trainers.trainer_id = classes.trainer_id
         LEFT JOIN attendance on attendance.class_id = classes.class_id
         LEFT JOIN class_types on class_types.class_type_id = classes.class_type_id
         WHERE type ILIKE :type
-        GROUP BY classes.class_id, first_name, last_name, class_types.type
+        GROUP BY classes.class_id, first_name, last_name, 
+                class_types.type, trainers.trainer_id
         ORDER BY date DESC, classes.class_id  
         OFFSET :offset         
         LIMIT :limit              
@@ -53,6 +57,7 @@ def get_classes(
             json.append(
                 {
                     "class_id": row.class_id,
+                    "trainer_id": row.trainer_id,
                     "trainer_name": row.first + " " + row.last,
                     "type": row.type,
                     "date": row.date,
@@ -76,17 +81,17 @@ class ClassJson(BaseModel):
 def add_classes(trainer_id: int, new_class: ClassJson):
     """
     This endpoint adds a new class to a trainer's schedule.
-        `date`: the day the class takes place, given by the following three values:
-            • "month": int representing month number of date
-            • "day": int representing day number of date
-            • "year": int representing year number of date
-        `start_time`: the time the class starts, given by the following values:
-            • "start_hour": int representing the hour of start_time
-            • "start_minutes": int representing the minutes of start_time
-        `end_time`: the time the class ends, given by the following values:
-            • "end_hour": int representing the hour of end_time
-            • "end_minutes": int representing the minutes of end_time
-        `class_type_id`:the id of the type of class
+    - `date`: the day the class takes place, given by the following three values:
+        - "month": int representing month number of date
+        - "day": int representing day number of date
+        - "year": int representing year number of date
+    - `start_time`: the time the class starts, given by the following values:
+        - "start_hour": int representing the hour of start_time
+        - "start_minutes": int representing the minutes of start_time
+    - `end_time`: the time the class ends, given by the following values:
+        - "end_hour": int representing the hour of end_time
+        - "end_minutes": int representing the minutes of end_time
+    - `class_type_id`:the id of the type of class
     """
 
     last_class_id_txt = sqlalchemy.text("""                            
@@ -170,15 +175,15 @@ class AttendanceJson(BaseModel):
 def add_attendance(class_id: int, dog_id: int, attd: AttendanceJson):
     """
     This endpoint adds a dog's attendance to a specific class.
-        `attendance_id`: the id of the attendance record
-        `dog_id`: the id of the dog attending
-        `class_id`: the id of the class the dog is attending
-        `check_in`: the timestamp the dog checked in
-            • "month": int representing month number of date
-            • "day": int representing day number of date
-            • "year": int representing year number of date
-            • "hour": int representing the hour dog was checked in
-            • "minutes": int representing the minutes dog was checked in
+    - `attendance_id`: the id of the attendance record
+    - `dog_id`: the id of the dog attending
+    - `class_id`: the id of the class the dog is attending
+    - `check_in`: the timestamp the dog checked in
+        - "month": int representing month number of date
+        - "day": int representing day number of date
+        - "year": int representing year number of date
+        - "hour": int representing the hour dog was checked in
+        - "minutes": int representing the minutes dog was checked in
     """
 
     # TODO: should check_in be able to be null? like give a null value for month, 
@@ -269,23 +274,25 @@ def add_attendance(class_id: int, dog_id: int, attd: AttendanceJson):
 def get_class(class_id: int):
     """
     This endpoint returns a specific class in the database. For every class, it returns:
-        `class_id`: the id associated with the trainer
-        `type`: the type of the class
-        `description`: description of the class
-        `trainer_first_name`: the first name of the trainer teaching the class
-        `trainer_last_name`: the first name of the trainer teaching the class
-        `date`: the day the class takes place
-        `start_time`: the time the class starts
-        `end_time`: the time the class ends
-        `dogs_attended`: a dictionary of a dog's id, name, and checkin time
-                            for the dogs that attended
+    - `class_id`: the id associated with the trainer
+    - `type`: the type of the class
+    - `description`: description of the class
+    - `trainer_id`: the id of the trainer teaching the class
+    - `trainer_first_name`: the first name of the trainer 
+    - `trainer_last_name`: the first name of the trainer 
+    - `date`: the day the class takes place
+    - `start_time`: the time the class starts
+    - `end_time`: the time the class ends
+    - `dogs_attended`: a dictionary of a dog's id, name, and checkin time
+                        for the dogs that attended
     """
     stmt = sqlalchemy.text("""                            
         SELECT classes.class_id, trainers.first_name as first, 
             trainers.last_name as last,
             class_types.type, class_types.description, 
             date, start_time, end_time,
-            dogs.dog_id, dogs.dog_name, attendance.check_in
+            dogs.dog_id, dogs.dog_name, attendance.check_in,
+            trainers.trainer_id as trainer_id
         FROM classes
         LEFT JOIN trainers on trainers.trainer_id = classes.trainer_id
         LEFT JOIN attendance on attendance.class_id = classes.class_id
@@ -303,6 +310,7 @@ def get_class(class_id: int):
         row1 = table[0]
         json = {
             "class_id": row1.class_id,
+            "trainer_id": row1.trainer_id,
             "trainer_first_name": row1.first,
             "trainer_last_name": row1.last,
             "type": row1.type,
