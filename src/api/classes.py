@@ -41,7 +41,8 @@ def get_classes(
         LEFT JOIN attendance on attendance.class_id = classes.class_id
         LEFT JOIN class_types on class_types.class_type_id = classes.class_type_id
         WHERE type ILIKE :type
-        GROUP BY classes.class_id, first_name, last_name, class_types.type, trainers.trainer_id
+        GROUP BY classes.class_id, first_name, last_name, 
+                class_types.type, trainers.trainer_id
         ORDER BY date DESC, classes.class_id  
         OFFSET :offset         
         LIMIT :limit              
