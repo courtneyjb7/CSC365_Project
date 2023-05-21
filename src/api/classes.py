@@ -125,12 +125,12 @@ def add_classes(new_class: ClassJson):
             ])
 
             return "success"
-        
-    except IntegrityError:
-        print("Error returned: <<<foreign key violation>>>")
     
     except Exception as error:
-        print(f"Error returned: <<<{error}>>>")
+        details = (error.args)[0]
+        if "DETAIL:  " in details:
+            details = details.split("DETAIL:  ")[1].replace("\n", "")
+        raise HTTPException(status_code=404, detail=details)
 
 
 @router.delete("/classes/{class_id}", tags=["classes"])
@@ -138,17 +138,21 @@ def delete_class(class_id: int):
     """
     This endpoint deletes a class based on its class ID.
     """
-    try:
-        with db.engine.begin() as conn:
-
-            conn.execute(sqlalchemy.text("""DELETE 
+    with db.engine.begin() as conn:
+        result = conn.execute(sqlalchemy.text("""SELECT class_id
                                         FROM classes 
-                                        where class_id = :id"""), 
-                                        [{"id": class_id}])
+                                        where class_id = :id
+                                    """), 
+                                    [{"id": class_id}]).one_or_none()
+        if result is None:
+            raise HTTPException(status_code=404, detail=("class_id does not exist in classes table."))
 
-        return f"success"
-    except Exception as error:
-        print(f"Error returned: <<<{error}>>>")
+        conn.execute(sqlalchemy.text("""DELETE 
+                                    FROM classes 
+                                    where class_id = :id"""), 
+                                    [{"id": class_id}])
+
+    return "success"
 
 
 @router.post("/classes/{class_id}/attendance", tags=["classes"])
@@ -198,12 +202,12 @@ def add_attendance(class_id: int, dog_id: int):
             ])
 
             return "success"
-    
-    except IntegrityError:
-        print("Error returned: <<<foreign key violation>>>")
 
     except Exception as error:
-        print(f"Error returned: <<<{error}>>>")
+        details = (error.args)[0]
+        if "DETAIL:  " in details:
+            details = details.split("DETAIL:  ")[1].replace("\n", "")
+        raise HTTPException(status_code=404, detail=details)
 
 
 @router.get("/classes/{class_id}", tags=["classes"])
