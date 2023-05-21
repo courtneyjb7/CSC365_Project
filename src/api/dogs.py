@@ -29,7 +29,10 @@ def get_dog(dog_id: int):
 
     """
     stmt = sqlalchemy.text("""                            
-        SELECT *
+        SELECT dogs.dog_id, dogs.dog_name, dogs.client_email, 
+            dogs.birthday, dogs.breed, comments.comment_id,
+            comments.time_added, comments.comment_text,
+            trainers.first_name, trainers.last_name
         FROM dogs
         LEFT JOIN comments on comments.dog_id = dogs.dog_id
         LEFT JOIN trainers on comments.trainer_id = trainers.trainer_id
@@ -68,11 +71,6 @@ def get_dog(dog_id: int):
 class CommentJson(BaseModel):
     trainer_id: int
     comment_text: str
-    month: int
-    day: int
-    year: int
-    hour: int
-    minute: int
 
 
 @router.post("/dogs/{dog_id}/comments", tags=["dogs"])
@@ -86,44 +84,23 @@ def add_comments(dog_id: int, new_comment: CommentJson):
     - `time_added`: the time and date the comment was made        
     """
 
-    last_comment_id_txt = sqlalchemy.text("""                            
-        SELECT comment_id
-        FROM comments
-        ORDER BY comment_id DESC
-        LIMIT 1            
-    """)
-
     try:
 
         with db.engine.begin() as conn:
-            # query most recent comment_id
-            last_comment_id = conn.execute(last_comment_id_txt).fetchone()[0]
-            # calculate new comment_id
-            comment_id = last_comment_id + 1
-        
-            datetime_added = datetime.datetime(db.try_parse(int, new_comment.year),
-                                        db.try_parse(int, new_comment.month),
-                                        db.try_parse(int, new_comment.day),
-                                        db.try_parse(int, new_comment.hour),
-                                        db.try_parse(int, new_comment.minute))
-        
 
             stmt = sqlalchemy.text("""
                 INSERT INTO comments
-                (comment_id, dog_id, trainer_id, comment_text, time_added)
-                VALUES (:comment_id, :dog_id, :trainer_id, :text, :time)
+                ( dog_id, trainer_id, comment_text)
+                VALUES (:dog_id, :trainer_id, :text)
             """)
 
-
             conn.execute(stmt, [{
-                "comment_id": comment_id,
                 "dog_id": dog_id,
-                "trainer_id": new_comment.trainer_id, 
-                "text": new_comment.comment_text,
-                "time": datetime_added
+                "trainer_id": db.try_parse(int, new_comment.trainer_id), 
+                "text": new_comment.comment_text
             }])
 
-        return comment_id 
+        return "success" 
     
     except Exception as error:
         print(f"Error returned: <<<{error}>>>")
@@ -142,7 +119,7 @@ def get_dogs(
     """
 
     stmt = sqlalchemy.text("""                            
-        SELECT *
+        SELECT dog_id, dog_name
         FROM dogs 
         WHERE dog_name ILIKE :name
         OFFSET :offset         

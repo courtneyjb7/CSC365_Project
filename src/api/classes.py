@@ -93,25 +93,14 @@ def add_classes(new_class: ClassJson):
     - `class_type_id`:the id of the type of class
     """
 
-    last_class_id_txt = sqlalchemy.text("""                            
-        SELECT class_id
-        FROM classes
-        ORDER BY class_id DESC
-        LIMIT 1            
-    """)
-
     try:
 
         with db.engine.begin() as conn:
-            # query most recent class_id
-            last_class_id = conn.execute(last_class_id_txt).fetchone()
-
-            new_class_id = last_class_id[0] + 1
 
             stm = sqlalchemy.text("""
                 INSERT INTO classes 
-                (class_id, trainer_id, date, start_time, end_time, class_type_id)
-                VALUES (:class_id, :trainer_id, :date, :start, :end, :class_type)
+                (trainer_id, date, start_time, end_time, class_type_id)
+                VALUES (:trainer_id, :date, :start, :end, :class_type)
             """)
 
             # verify data types
@@ -126,8 +115,7 @@ def add_classes(new_class: ClassJson):
                                        db.try_parse(int, new_class.end_minutes))
 
             conn.execute(stm, [
-                {
-                    "class_id": new_class_id, 
+                { 
                     "trainer_id": new_class.trainer_id,
                     "date": class_date,
                     "start": start_time,
@@ -136,7 +124,7 @@ def add_classes(new_class: ClassJson):
                 }
             ])
 
-            return new_class_id
+            return "success"
         
     except IntegrityError:
         print("Error returned: <<<foreign key violation>>>")
@@ -150,29 +138,21 @@ def delete_class(class_id: int):
     """
     This endpoint deletes a class based on its class ID.
     """
-    with db.engine.begin() as conn:
-        # check that class exists
-        get_class(class_id)
+    try:
+        with db.engine.begin() as conn:
 
-        conn.execute(sqlalchemy.text("""DELETE 
-                                     FROM classes 
-                                     where class_id = :id"""), 
-                                    [{"id": class_id}])
+            conn.execute(sqlalchemy.text("""DELETE 
+                                        FROM classes 
+                                        where class_id = :id"""), 
+                                        [{"id": class_id}])
 
-    return f"Class {class_id} deleted"
-
-
-class AttendanceJson(BaseModel):
-    dog_id: int
-    month: int
-    day: int
-    year: int
-    hour: int
-    minutes: int
+        return f"success"
+    except Exception as error:
+        print(f"Error returned: <<<{error}>>>")
 
 
-@router.put("/classes/{class_id}/attendance", tags=["classes"])
-def add_attendance(class_id: int, attd: AttendanceJson):
+@router.post("/classes/{class_id}/attendance", tags=["classes"])
+def add_attendance(class_id: int, dog_id: int):
     """
     This endpoint adds a dog's attendance to a specific class.
     - `attendance_id`: the id of the attendance record
@@ -186,82 +166,38 @@ def add_attendance(class_id: int, attd: AttendanceJson):
         - "minutes": int representing the minutes dog was checked in
     """
 
-    # TODO: should check_in be able to be null? like give a null value for month, 
-    # and all other fields
-
     try:
 
         with db.engine.begin() as conn:
             # TODO: attendance entity and enrolled entity
-
-            check_in = datetime.datetime(
-                    db.try_parse(int, attd.year),
-                    db.try_parse(int, attd.month),
-                    db.try_parse(int, attd.day),
-                    db.try_parse(int, attd.hour),
-                    db.try_parse(int, attd.minutes)
-                )
-
-            # does an attendance already exist for the dog_id in that class_id?
-            stm = sqlalchemy.text("""                            
-                SELECT *
+            # TODO: ON CONFLICT (dog_id, class_id) DO NOTHING? -- upsert
+            stm = sqlalchemy.text("""
+                SELECT attendance_id
                 FROM attendance
-                WHERE dog_id = :dog_id and class_id = :class_id           
+                WHERE dog_id = :dog_id AND class_id = :class_id               
+            """)
+            result = conn.execute(stm, [
+                {
+                    "dog_id": dog_id,
+                    "class_id": class_id,
+                }
+            ]).one_or_none()
+            if result is not None:
+                raise HTTPException(status_code=404, detail="dog already checked into this class.")
+            stm = sqlalchemy.text("""
+                INSERT INTO attendance 
+                (dog_id, class_id)
+                VALUES (:dog_id, :class_id)                
             """)
 
-            attendance = conn.execute(stm, [{
-                "dog_id": attd.dog_id,
-                "class_id": class_id
-            }]).fetchone()
+            conn.execute(stm, [
+                {
+                    "dog_id": dog_id,
+                    "class_id": class_id,
+                }
+            ])
 
-
-            if attendance is not None:  # if yes, then update
-                stm = sqlalchemy.text("""                            
-                    UPDATE attendance
-                    SET check_in = :check_in
-                    WHERE dog_id = :dog_id 
-                    and class_id = :class_id 
-                    and attendance_id = :attendance_id     
-                """)
-
-                conn.execute(stm, [
-                    {
-                        "attendance_id": attendance[0], 
-                        "dog_id": attd.dog_id,
-                        "class_id": class_id,
-                        "check_in": check_in,
-                    }
-                ])
-
-            else:   # if no, then insert, get last attendance id
-
-                last_attendance_id_txt = sqlalchemy.text("""                            
-                    SELECT attendance_id
-                    FROM attendance
-                    ORDER BY attendance_id DESC
-                    LIMIT 1            
-                """)
-
-                last_attendance_id = conn.execute(last_attendance_id_txt).fetchone()[0]
-
-                new_id = last_attendance_id + 1
-
-                stm = sqlalchemy.text("""
-                    INSERT INTO attendance 
-                    (attendance_id, dog_id, class_id, check_in)
-                    VALUES (:attendance_id, :dog_id, :class_id, :check_in)
-                """)
-
-                conn.execute(stm, [
-                    {
-                        "attendance_id": new_id, 
-                        "dog_id": attd.dog_id,
-                        "class_id": class_id,
-                        "check_in": check_in,
-                    }
-                ])
-
-        return new_id
+            return "success"
     
     except IntegrityError:
         print("Error returned: <<<foreign key violation>>>")
@@ -301,13 +237,15 @@ def get_class(class_id: int):
         WHERE classes.class_id = :id  
         ORDER BY dogs.dog_id
     """)
-
+    # try:
     with db.engine.connect() as conn:
         result = conn.execute(stmt, [{"id": class_id}])
-        table = result.fetchall()
+        # table is used to get all the dogs attending
+        table =  result.fetchall()
         if table == []:
             raise HTTPException(status_code=404, detail="class not found.")
-        row1 = table[0]
+        # row1 is used to get singular class information, such as id
+        row1 = table[0]  
         json = {
             "class_id": row1.class_id,
             "trainer_id": row1.trainer_id,

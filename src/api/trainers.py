@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from src import database as db
 import sqlalchemy
+from fastapi.params import Query
 
 router = APIRouter()
 
@@ -39,7 +40,7 @@ def get_trainer(trainer_id: int):
     - `email`: the company email of the trainer
     """
     stmt = sqlalchemy.text("""                            
-            SELECT *
+            SELECT trainer_id, first_name, last_name, email
             FROM trainers
             WHERE trainers.trainer_id = (:id)                        
         """)
@@ -63,7 +64,10 @@ def get_trainer(trainer_id: int):
 
 
 @router.get("/trainers/", tags=["trainers"])
-def get_trainers():
+def get_trainers(
+    limit: int = Query(50, ge=1, le=250),
+    offset: int = Query(0, ge=0)
+):
     """
     This endpoint returns all the trainers in the database. 
     For every trainer, it returns:
@@ -72,12 +76,15 @@ def get_trainers():
     """
 
     stmt = sqlalchemy.text("""                            
-        SELECT *
-        FROM trainers             
+        SELECT trainer_id, first_name, last_name
+        FROM trainers  
+        LIMIT :limit
+        OFFSET :offset           
     """)
 
     with db.engine.connect() as conn:
-        result = conn.execute(stmt)
+        result = conn.execute(stmt, [{"offset": offset,
+                                      "limit": limit}])
         json = []
         for row in result:
             json.append(
