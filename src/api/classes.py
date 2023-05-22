@@ -5,6 +5,8 @@ from pydantic import BaseModel
 import sqlalchemy
 import datetime
 from enum import Enum
+from src.api import rooms
+
 
 router = APIRouter()
 
@@ -113,6 +115,10 @@ def add_classes(new_class: ClassJson):
             
             end_time = datetime.time(db.try_parse(int, new_class.end_hour),
                                        db.try_parse(int, new_class.end_minutes))
+
+            # test room finding
+            room = rooms.find_room(new_class.class_type_id, class_date, start_time, end_time, conn)
+            print(room)
 
             conn.execute(stm, [
                 { 
