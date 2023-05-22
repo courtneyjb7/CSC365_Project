@@ -4,6 +4,7 @@ from fastapi.params import Query
 from pydantic import BaseModel
 import sqlalchemy
 import datetime
+from enum import Enum
 
 router = APIRouter()
 
@@ -20,7 +21,7 @@ def get_classes(
     - `trainer_id: the id of the trainer
     - `trainer_name`: name of the trainer
     - `type`: the type of class
-    - `date`: the date the class take places
+    - `date`: the date the class takes place on
     - `num_of_dogs_attended`: the number of dogs attending the class
 
     You can filter by type with the `type` query parameter.
@@ -273,3 +274,101 @@ def get_class(class_id: int):
                 )
     
     return json
+
+class DayOptions(str, Enum):
+    sun = "Sunday"
+    mon = "Monday"
+    tues = "Tuesday"
+    wed = "Wednesday"
+    thurs = "Thursday"
+    fri = "Friday"
+    sat = "Saturday"    
+
+class time_options(str, Enum):
+    morning = "morning"
+    midday = "midday"
+    afternoon = "afternoon"
+
+@router.get("/classes/available/", tags=["classes"])
+def find_classes(class_type_id: int = 1,
+                 time_range: time_options = time_options.midday,                 
+                 day1: DayOptions = DayOptions.sun,
+                 day2: DayOptions = None,
+                 day3: DayOptions = None,
+                 day4: DayOptions = None,
+                 day5: DayOptions = None,
+                 day6: DayOptions = None,
+                 day7: DayOptions = None,
+                 limit: int = Query(50, ge=1, le=250)
+):                 
+    """
+    This endpoint finds classes that meet the given criteria.
+    It accepts a time range and any days of the week dog is available, 
+    and the class type the dog needs.
+    For every class, it returns:
+    - `class_id`: the id associated with the class
+    - `trainer_id: the id of the trainer
+    - `type`: the type of class
+    - `date`: the date the class takes place on
+    - `start_time`: the time the class starts
+    - `end_time`: the time the class ends
+    """
+    if time_range == "morning":
+        time_range = ("08:00:00", "11:00:00")
+    elif time_range == "midday":
+        time_range = ("11:00:00", "14:00:00")
+    else:
+        time_range = ("14:00:00", "17:00:00")
+
+    with db.engine.connect() as conn:
+        
+        valid_classes = conn.execute(sqlalchemy.text("""
+            SELECT class_id, trainer_id, type, date,
+                start_time, end_time
+            FROM classes
+            JOIN class_types ON 
+                class_types.class_type_id = classes.class_type_id
+            WHERE classes.class_type_id = :type_id AND 
+                date > CURRENT_DATE AND
+                (to_char(date, 'Day') LIKE :day1 OR
+                to_char(date, 'Day') LIKE :day2 OR
+                to_char(date, 'Day') LIKE :day3 OR
+                to_char(date, 'Day') LIKE :day4 OR
+                to_char(date, 'Day') LIKE :day5 OR
+                to_char(date, 'Day') LIKE :day6 OR
+                to_char(date, 'Day') LIKE :day7) AND
+                (CAST(:range_start AS TIME) < start_time AND 
+                    CAST(:range_end AS TIME) > end_time)
+            ORDER BY date ASC
+            LIMIT :limit
+        """), [{
+                "type_id": class_type_id,
+                "day1": f"%{day1}%",
+                "day2": f"%{day2}%",
+                "day3": f"%{day3}%",
+                "day4": f"%{day4}%",
+                "day5": f"%{day5}%",
+                "day6": f"%{day6}%",
+                "day7": f"%{day7}%",
+                "limit": limit,
+                "range_start": time_range[0],
+                "range_end": time_range[1]
+                }]).fetchall()
+        json = []
+        for row in valid_classes:
+            json.append(
+                {
+                    "class_id": row.class_id,
+                    "trainer_id": row.trainer_id,
+                    "type": row.type,
+                    "date": row.date,
+                    "start_time": row.start_time,
+                    "end_time": row.end_time
+                }
+            )
+        if json == []:
+            return "There are no classes that match this criteria."
+        return json
+    
+        
+        
