@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException
 from src import database as db
 import sqlalchemy
 from pydantic import BaseModel
-import datetime
 from fastapi.params import Query
 
 router = APIRouter()

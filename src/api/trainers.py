@@ -22,7 +22,8 @@ def add_trainer(trainer: TrainerJson):
     - `password`: the trainer's password. Password should be 6 characters or more.
     """
     if len(trainer.password) < 6:
-        raise HTTPException(status_code=400, detail="password must be 6 or more characters.")
+        raise HTTPException(status_code=400, 
+                            detail="password must be 6 or more characters.")
     try:
         with db.engine.begin() as conn:
             stm = sqlalchemy.text("""

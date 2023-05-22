@@ -3,7 +3,6 @@ from src import database as db
 from fastapi.params import Query
 from pydantic import BaseModel
 import sqlalchemy
-from sqlalchemy.exc import IntegrityError
 import datetime
 
 router = APIRouter()
@@ -145,7 +144,8 @@ def delete_class(class_id: int):
                                     """), 
                                     [{"id": class_id}]).one_or_none()
         if result is None:
-            raise HTTPException(status_code=404, detail=("class_id does not exist in classes table."))
+            raise HTTPException(status_code=404, 
+                                detail=("class_id does not exist in classes table."))
 
         conn.execute(sqlalchemy.text("""DELETE 
                                     FROM classes 
@@ -187,7 +187,8 @@ def add_attendance(class_id: int, dog_id: int):
                 }
             ]).one_or_none()
             if result is not None:
-                raise HTTPException(status_code=404, detail="dog already checked into this class.")
+                raise HTTPException(status_code=404, 
+                                    detail="dog already checked into this class.")
             stm = sqlalchemy.text("""
                 INSERT INTO attendance 
                 (dog_id, class_id)
