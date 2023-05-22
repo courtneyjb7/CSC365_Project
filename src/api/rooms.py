@@ -28,8 +28,15 @@ def verify_date_types(class_criteria):
                                 db.try_parse(int, class_criteria.end_minutes))
     return class_date, start_time, end_time
 # eventually remove endpoint and use this function in post classes?
-@router.post("/rooms/", tags=["rooms"])
-def get_room(criteria: RoomCriteriaJson):
+@router.get("/rooms/", tags=["rooms"])
+def get_room(month: int,
+    day: int,
+    year: int,
+    start_hour: int,
+    start_minutes: int,
+    end_hour: int,
+    end_minutes: int,
+    class_type_id: int):
     """
     This endpoint returns a room in the facility that best meets the
     criteria of a potential class to take place there.
@@ -92,7 +99,7 @@ capacity > given class max. The largest room available has room_id \
                                 detail="no rooms available for this date/time.")
 
 def find_room(class_type_id, class_date, 
-              start_time, end_time, conn):
+              start_time, end_time, conn, room):
     
     result = conn.execute(sqlalchemy.text("""
         SELECT max_num_dogs
@@ -105,7 +112,7 @@ def find_room(class_type_id, class_date,
     class_max = result.max_num_dogs
     
     available_rooms = conn.execute(sqlalchemy.text("""
-        SELECT room_id, max_dog_capacity
+        SELECT room_id
         FROM rooms
         WHERE room_id NOT IN (
             SELECT classes.room_id
@@ -126,20 +133,6 @@ def find_room(class_type_id, class_date,
             "end_time": end_time
             }]).fetchall()
     
-    if available_rooms != []:
-        holds_class_max = list(filter(lambda x: x[1] > class_max, available_rooms))
-        # avail rooms already sorted
-        if len(holds_class_max):
-            # select room_id with smallest capacity 
-            # that fits class max if one exists
-            room = holds_class_max[0][0]
-            return room
-        else: 
-            # if no room that hold class max size, select largest room
-            room = available_rooms[-1]
-            raise HTTPException(status_code=404, 
-                    detail=f"""there are no rooms that fit the given class max. \
-The largest room available has room_id {room[0]} of capacity {room[1]}""")
-    else:
+    if room not in available_rooms:
         raise HTTPException(status_code=404, 
-                            detail="no rooms available for this date/time.")
+                            detail="the provided room is unavailable at this day/time.")
