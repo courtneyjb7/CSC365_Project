@@ -103,10 +103,10 @@ def test_get_classes_filter():
         assert response.json() == json.load(f)
 
 def test_delete_class_1():
-    del_response = client.get(f"/classes/500")
+    del_response = client.get("/classes/500")
     assert del_response.status_code == 404
 
 def test_delete_class_2():
-    del_response = client.get(f"/classes/-1")
+    del_response = client.get("/classes/-1")
     assert del_response.status_code == 404
 
