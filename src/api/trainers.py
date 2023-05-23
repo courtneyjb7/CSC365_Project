@@ -59,7 +59,7 @@ def add_trainer(trainer: TrainerJson):
 @router.get("/trainers/{trainer_email}/{pwd}", tags=["trainers"])
 def verify_password(trainer_email: str, pwd: str):
     """
-    This endpoint verifies the login credentials for a trainer. 
+    This endpoint verifies the login credentials for a trainer. Returns trainer id
     - `trainer_email`: the email associated with the trainer
     - `pwd`: trainer's password
     """
