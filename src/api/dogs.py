@@ -76,11 +76,11 @@ class CommentJson(BaseModel):
 def add_comments(dog_id: int, new_comment: CommentJson):
     """
     This endpoint updates trainer comments for a dog. 
-    - `comment_id`: the id of the comment
     - `dog_id`: the id of the dog the comment is about
+
+    Provide a body json with the following information:
     - `trainer_id`: the id of the trainer who made the comment
-    - `comment_text`: a string from the trainer about the dog's progress
-    - `time_added`: the time and date the comment was made        
+    - `comment_text`: a string from the trainer about the dog's progress   
     """
 
     try:

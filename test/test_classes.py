@@ -110,3 +110,12 @@ def test_get_classes_offset():
 
     with open("test/classes/limit=5&offset=2.json", encoding="utf-8") as f:
         assert response.json() == json.load(f)
+
+def test_delete_class_1():
+    del_response = client.get("/classes/500")
+    assert del_response.status_code == 404
+
+def test_delete_class_2():
+    del_response = client.get("/classes/-1")
+    assert del_response.status_code == 404
+
