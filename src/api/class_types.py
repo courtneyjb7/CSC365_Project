@@ -13,12 +13,14 @@ def get_class_types(
     """
     This endpoint returns all of the types of training classes in the database. 
     For every type, it returns:
-        `type_id`: the id associated with the class type
-        `type`: the type of class
-        `description`: a description of the class
-        `max_num_dogs`: number of dogs that can be in class type
+    - `type_id`: the id associated with the class type
+    - `type`: the type of class
+    - `description`: a description of the class
+    - `max_num_dogs`: number of dogs that can be in class type
 
-    You can filter by type with the `type` query parameter. 
+    The endpoint accepts a `limit` and `offset` on the results. 
+    
+    You can also filter by type with the `type` query parameter. 
     For example, "Puppy" or "Beginner".
     """
     stmt = sqlalchemy.text("""                            

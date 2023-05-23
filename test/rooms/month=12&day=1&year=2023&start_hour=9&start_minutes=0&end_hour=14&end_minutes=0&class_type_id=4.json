@@ -1,0 +1,3 @@
+{
+    "detail": "the only rooms available have a max room capacity < given class max size. The largest room available has room_id 4 of capacity 40"
+}

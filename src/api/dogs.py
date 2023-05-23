@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException
 from src import database as db
 import sqlalchemy
 from pydantic import BaseModel
-import datetime
 from fastapi.params import Query
 
 router = APIRouter()
@@ -13,23 +12,26 @@ def get_dog(dog_id: int):
     """
     This endpoint returns information about a dog in the database. 
     For every dog, it returns:
-        `dog_id`: the id associated with the dog
-        `name`: the name of the dog
-        `client_email`: the email of the owner of the dog
-        `birthday`: the dog's date of birth
-        `breed`: the dog's breed
-        `trainer_comments`: a list of comments from the 
+    - `dog_id`: the id associated with the dog
+    - `name`: the name of the dog
+    - `client_email`: the email of the owner of the dog
+    - `birthday`: the dog's date of birth (nullable)
+    - `breed`: the dog's breed (nullable)
+    - `trainer_comments`: a list of comments from the 
             trainer about the dog's progress 
 
-            Each comment returns:
-                `comment_id`: the id of the comment
-                `trainer`: the name of the trainer who wrote the comment
-                `time_added`: the day and time the comment was made
-                `text`: the comment text
+    Each comment returns:
+    - `comment_id`: the id of the comment
+    - `trainer`: the name of the trainer who wrote the comment
+    - `time_added`: the day and time the comment was made
+    - `text`: the comment text
 
     """
     stmt = sqlalchemy.text("""                            
-        SELECT *
+        SELECT dogs.dog_id, dogs.dog_name, dogs.client_email, 
+            dogs.birthday, dogs.breed, comments.comment_id,
+            comments.time_added, comments.comment_text,
+            trainers.first_name, trainers.last_name
         FROM dogs
         LEFT JOIN comments on comments.dog_id = dogs.dog_id
         LEFT JOIN trainers on comments.trainer_id = trainers.trainer_id
@@ -39,20 +41,20 @@ def get_dog(dog_id: int):
 
     with db.engine.connect() as conn:
         result = conn.execute(stmt, [{"id": dog_id}])
-        table = result.fetchall()
-        if table == []:
+        dog_comments_info = result.fetchall()
+        if dog_comments_info == []:
             raise HTTPException(status_code=404, detail="dog not found.")
-        row1 = table[0]
+        dog_info = dog_comments_info[0]
         json = {
-            "dog_id": row1.dog_id,
-            "name": row1.dog_name,
-            "client_email": row1.client_email, 
-            "birthday": row1.birthday,
-            "breed": row1.breed,
+            "dog_id": dog_info.dog_id,
+            "name": dog_info.dog_name,
+            "client_email": dog_info.client_email, 
+            "birthday": dog_info.birthday,
+            "breed": dog_info.breed,
             "trainer_comments": []
         }
-        if row1.comment_id is not None:
-            for row in table:
+        if dog_info.comment_id is not None:
+            for row in dog_comments_info:
                 json["trainer_comments"].append(
                     {
                         "comment_id": row.comment_id,
@@ -68,65 +70,45 @@ def get_dog(dog_id: int):
 class CommentJson(BaseModel):
     trainer_id: int
     comment_text: str
-    month: int
-    day: int
-    year: int
-    hour: int
-    minute: int
 
 
 @router.post("/dogs/{dog_id}/comments", tags=["dogs"])
 def add_comments(dog_id: int, new_comment: CommentJson):
     """
     This endpoint updates trainer comments for a dog. 
-        `comment_id`: the id of the comment
-        `dog_id`: the id of the dog the comment is about
-        `trainer_id`: the id of the trainer who made the comment
-        `comment_text`: a string from the trainer about the dog's progress
-        `time_added`: the time and date the comment was made        
-    """
+    - `dog_id`: the id of the dog the comment is about
 
-    last_comment_id_txt = sqlalchemy.text("""                            
-        SELECT comment_id
-        FROM comments
-        ORDER BY comment_id DESC
-        LIMIT 1            
-    """)
+    Provide a body json with the following information:
+    - `trainer_id`: the id of the trainer who made the comment
+    - `comment_text`: a string from the trainer about the dog's progress   
+    """
 
     try:
 
         with db.engine.begin() as conn:
-            # query most recent comment_id
-            last_comment_id = conn.execute(last_comment_id_txt).fetchone()[0]
-            # calculate new comment_id
-            comment_id = last_comment_id + 1
-        
-            datetime_added = datetime.datetime(db.try_parse(int, new_comment.year),
-                                        db.try_parse(int, new_comment.month),
-                                        db.try_parse(int, new_comment.day),
-                                        db.try_parse(int, new_comment.hour),
-                                        db.try_parse(int, new_comment.minute))
-        
 
             stmt = sqlalchemy.text("""
                 INSERT INTO comments
-                (comment_id, dog_id, trainer_id, comment_text, time_added)
-                VALUES (:comment_id, :dog_id, :trainer_id, :text, :time)
+                ( dog_id, trainer_id, comment_text)
+                VALUES (:dog_id, :trainer_id, :text)
             """)
 
-
             conn.execute(stmt, [{
-                "comment_id": comment_id,
                 "dog_id": dog_id,
-                "trainer_id": new_comment.trainer_id, 
-                "text": new_comment.comment_text,
-                "time": datetime_added
+                "trainer_id": db.try_parse(int, new_comment.trainer_id), 
+                "text": new_comment.comment_text
             }])
 
-        return comment_id 
+        return "success" 
     
     except Exception as error:
-        print(f"Error returned: <<<{error}>>>")
+        if error.args != ():
+            details = (error.args)[0]
+            if "DETAIL:  " in details:
+                details = details.split("DETAIL:  ")[1].replace("\n", "")
+            raise HTTPException(status_code=404, detail=details)
+        else:
+            raise
 
 @router.get("/dogs/", tags=["dogs"])
 def get_dogs(
@@ -137,12 +119,12 @@ def get_dogs(
     """
     This endpoint returns all the dogs in the database. 
     For every dog, it returns:
-        `dog_id`: the id associated with the dog
-        `dog_name`: the name of the dog
+    - `dog_id`: the id associated with the dog
+    - `dog_name`: the name of the dog
     """
 
     stmt = sqlalchemy.text("""                            
-        SELECT *
+        SELECT dog_id, dog_name
         FROM dogs 
         WHERE dog_name ILIKE :name
         OFFSET :offset         
@@ -163,3 +145,36 @@ def get_dogs(
             )
 
     return json
+
+
+@router.delete("/dogs/comments/{comment_id}", tags=["dogs"])
+def delete_comments(comment_id: int):
+    """
+    This endpoint deletes a comment for a dog based on its comment ID.
+    """
+    try:
+        with db.engine.begin() as conn:
+            result = conn.execute(sqlalchemy.text("""SELECT comment_id
+                                            FROM comments 
+                                            where comment_id = :id
+                                        """), 
+                                        [{"id": comment_id}]).one_or_none()
+            if result is None:
+                raise HTTPException(status_code=404, 
+                        detail=("comment_id does not exist in comments table."))
+
+            conn.execute(sqlalchemy.text("""DELETE 
+                                        FROM comments 
+                                        where comment_id = :id"""), 
+                                        [{"id": comment_id}])
+
+        return "success"
+    
+    except Exception as error:
+        if error.args != ():
+            details = (error.args)[0]
+            if "DETAIL:  " in details:
+                details = details.split("DETAIL:  ")[1].replace("\n", "")
+            raise HTTPException(status_code=404, detail=details)
+        else:
+            raise

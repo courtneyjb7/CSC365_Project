@@ -1,21 +1,24 @@
 {
     "class_id": 1,
+    "trainer_id": 0,
     "trainer_first_name": "Veronica",
     "trainer_last_name": "Guzman",
     "type": "Beginner",
     "date": "2023-05-03",
     "start_time": "13:00:00",
     "end_time": "14:00:00",
+    "room_id": 3,
+    "room_name": "Room D",
     "dogs_attended": [
-      {
-        "dog_id": 0,
-        "dog_name": "Buddy",
-        "check_in_time": "2023-05-03T13:02:00+00:00"
-      },
-      {
-        "dog_id": 1,
-        "dog_name": "Roxy",
-        "check_in_time": "2023-05-03T13:01:00+00:00"
-      }
+        {
+            "dog_id": 0,
+            "dog_name": "Buddy",
+            "check_in_time": "2023-05-03T13:02:00+00:00"
+        },
+        {
+            "dog_id": 1,
+            "dog_name": "Roxy",
+            "check_in_time": "2023-05-03T13:01:00+00:00"
+        }
     ]
-  }
+}
