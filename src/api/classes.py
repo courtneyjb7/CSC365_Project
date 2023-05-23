@@ -25,6 +25,7 @@ def get_classes(
     - `type`: the type of class
     - `date`: the date the class takes place on
     - `num_of_dogs_attended`: the number of dogs attending the class
+    - `room_id`: the id of the room the class takes place in
 
     You can filter by type with the `type` query parameter.
     You can `limit` and `offset` the results. 
@@ -36,7 +37,8 @@ def get_classes(
             trainers.last_name as last,
             class_types.type as type, date, 
             COUNT(attendance) as num_dogs,
-            trainers.trainer_id as trainer_id
+            trainers.trainer_id as trainer_id,
+            classes.room_id
         FROM classes
         LEFT JOIN trainers on trainers.trainer_id = classes.trainer_id
         LEFT JOIN attendance on attendance.class_id = classes.class_id
@@ -60,7 +62,8 @@ def get_classes(
                     "trainer_name": row.first + " " + row.last,
                     "type": row.type,
                     "date": row.date,
-                    "num_of_dogs_attended": row.num_dogs
+                    "num_of_dogs_attended": row.num_dogs,
+                    "room_id": row.room_id
                 }
             )
     
@@ -76,6 +79,7 @@ class ClassJson(BaseModel):
     end_hour: int
     end_minutes: int
     class_type_id: int
+    room_id: int
 
 @router.post("/classes/", tags=["classes"])
 def add_classes(new_class: ClassJson):
@@ -93,6 +97,7 @@ def add_classes(new_class: ClassJson):
         - "end_hour": int representing the hour of end_time
         - "end_minutes": int representing the minutes of end_time
     - `class_type_id`:the id of the type of class
+    - `room_id`: the id of the room the trainer wants to teach the class in
     """
 
     try:
@@ -101,8 +106,8 @@ def add_classes(new_class: ClassJson):
 
             stm = sqlalchemy.text("""
                 INSERT INTO classes 
-                (trainer_id, date, start_time, end_time, class_type_id)
-                VALUES (:trainer_id, :date, :start, :end, :class_type)
+                (trainer_id, date, start_time, end_time, class_type_id, room_id)
+                VALUES (:trainer_id, :date, :start, :end, :class_type, :room)
             """)
 
             # verify data types
@@ -116,9 +121,8 @@ def add_classes(new_class: ClassJson):
             end_time = datetime.time(db.try_parse(int, new_class.end_hour),
                                        db.try_parse(int, new_class.end_minutes))
 
-            # test room finding
-            room = rooms.find_room(new_class.class_type_id, class_date, start_time, end_time, conn)
-            print(room)
+            # check that room is available at given date/time
+            rooms.find_room(class_date, start_time, end_time, conn, new_class.room_id)
 
             conn.execute(stm, [
                 { 
@@ -127,16 +131,20 @@ def add_classes(new_class: ClassJson):
                     "start": start_time,
                     "end": end_time,
                     "class_type": new_class.class_type_id,
+                    "room": new_class.room_id
                 }
             ])
 
             return "success"
     
     except Exception as error:
-        details = (error.args)[0]
-        if "DETAIL:  " in details:
-            details = details.split("DETAIL:  ")[1].replace("\n", "")
-        raise HTTPException(status_code=404, detail=details)
+        if error.args != ():
+            details = (error.args)[0]
+            if "DETAIL:  " in details:
+                details = details.split("DETAIL:  ")[1].replace("\n", "")
+            raise HTTPException(status_code=404, detail=details)
+        else:
+            raise
 
 
 @router.delete("/classes/{class_id}", tags=["classes"])
@@ -144,22 +152,33 @@ def delete_class(class_id: int):
     """
     This endpoint deletes a class based on its class ID.
     """
-    with db.engine.begin() as conn:
-        result = conn.execute(sqlalchemy.text("""SELECT class_id
+    try:
+        with db.engine.begin() as conn:
+            result = conn.execute(sqlalchemy.text("""SELECT class_id
+                                            FROM classes 
+                                            where class_id = :id
+                                        """), 
+                                        [{"id": class_id}]).one_or_none()
+            if result is None:
+                raise HTTPException(status_code=404, 
+                                    detail=("class_id does not exist in classes table."))
+
+            conn.execute(sqlalchemy.text("""DELETE 
                                         FROM classes 
-                                        where class_id = :id
-                                    """), 
-                                    [{"id": class_id}]).one_or_none()
-        if result is None:
-            raise HTTPException(status_code=404, 
-                                detail=("class_id does not exist in classes table."))
+                                        where class_id = :id"""), 
+                                        [{"id": class_id}])
 
-        conn.execute(sqlalchemy.text("""DELETE 
-                                    FROM classes 
-                                    where class_id = :id"""), 
-                                    [{"id": class_id}])
+        return "success"
+    
+    except Exception as error:
+        if error.args != ():
+            details = (error.args)[0]
+            if "DETAIL:  " in details:
+                details = details.split("DETAIL:  ")[1].replace("\n", "")
+            raise HTTPException(status_code=404, detail=details)
+        else:
+            raise
 
-    return "success"
 
 
 @router.post("/classes/{class_id}/attendance", tags=["classes"])
@@ -181,7 +200,6 @@ def add_attendance(class_id: int, dog_id: int):
 
         with db.engine.begin() as conn:
             # TODO: attendance entity and enrolled entity
-            # TODO: ON CONFLICT (dog_id, class_id) DO NOTHING? -- upsert
             stm = sqlalchemy.text("""
                 SELECT attendance_id
                 FROM attendance
@@ -212,10 +230,14 @@ def add_attendance(class_id: int, dog_id: int):
             return "success"
 
     except Exception as error:
-        details = (error.args)[0]
-        if "DETAIL:  " in details:
-            details = details.split("DETAIL:  ")[1].replace("\n", "")
-        raise HTTPException(status_code=404, detail=details)
+        if error.args != ():
+            details = (error.args)[0]
+            if "DETAIL:  " in details:
+                details = details.split("DETAIL:  ")[1].replace("\n", "")
+            raise HTTPException(status_code=404, detail=details)
+        else:
+            raise
+        
 
 
 @router.get("/classes/{class_id}", tags=["classes"])
@@ -231,6 +253,8 @@ def get_class(class_id: int):
     - `date`: the day the class takes place
     - `start_time`: the time the class starts
     - `end_time`: the time the class ends
+    - `room_id`: the id of the room the class takes place in
+    - `room_name`: the name of the room the class takes place in
     - `dogs_attended`: a dictionary of a dog's id, name, and checkin time
                         for the dogs that attended
     """
@@ -240,16 +264,17 @@ def get_class(class_id: int):
             class_types.type, class_types.description, 
             date, start_time, end_time,
             dogs.dog_id, dogs.dog_name, attendance.check_in,
-            trainers.trainer_id as trainer_id
+            trainers.trainer_id as trainer_id, 
+            rooms.room_id, room_name
         FROM classes
         LEFT JOIN trainers on trainers.trainer_id = classes.trainer_id
         LEFT JOIN attendance on attendance.class_id = classes.class_id
         LEFT JOIN class_types on class_types.class_type_id = classes.class_type_id
         LEFT JOIN dogs on dogs.dog_id = attendance.dog_id
+        LEFT JOIN rooms ON rooms.room_id = classes.room_id
         WHERE classes.class_id = :id  
         ORDER BY dogs.dog_id
     """)
-    # try:
     with db.engine.connect() as conn:
         result = conn.execute(stmt, [{"id": class_id}])
         # table is used to get all the dogs attending
@@ -267,6 +292,8 @@ def get_class(class_id: int):
             "date": row1.date,
             "start_time": row1.start_time,
             "end_time": row1.end_time,
+            "room_id": row1.room_id,
+            "room_name": row1.room_name,
             "dogs_attended": []
         }
         if row1.dog_id is not None:

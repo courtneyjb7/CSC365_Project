@@ -47,10 +47,13 @@ def add_trainer(trainer: TrainerJson):
 
             return "success"
     except Exception as error:
-        details = (error.args)[0]
-        if "DETAIL:  " in details:
-            details = details.split("DETAIL:  ")[1].replace("\n", "")
-        raise HTTPException(status_code=404, detail=details)
+        if error.args != ():
+            details = (error.args)[0]
+            if "DETAIL:  " in details:
+                details = details.split("DETAIL:  ")[1].replace("\n", "")
+            raise HTTPException(status_code=404, detail=details)
+        else:
+            raise
 
 
 @router.get("/trainers/{trainer_email}/{pwd}", tags=["trainers"])
