@@ -3,8 +3,10 @@ from src import database as db
 from fastapi.params import Query
 from pydantic import BaseModel
 import sqlalchemy
-from sqlalchemy.exc import IntegrityError
 import datetime
+from enum import Enum
+from src.api import rooms
+
 
 router = APIRouter()
 
@@ -21,10 +23,10 @@ def get_classes(
     - `trainer_id: the id of the trainer
     - `trainer_name`: name of the trainer
     - `type`: the type of class
-    - `date`: the date the class take places
+    - `date`: the date the class takes place on
     - `num_of_dogs_attended`: the number of dogs attending the class
+    - `room_id`: the id of the room the class takes place in
 
-    You can filter by type with the `type` query parameter.
     You can `limit` and `offset` the results. 
 
     Classes are sorted by date in descending order.
@@ -34,7 +36,8 @@ def get_classes(
             trainers.last_name as last,
             class_types.type as type, date, 
             COUNT(attendance) as num_dogs,
-            trainers.trainer_id as trainer_id
+            trainers.trainer_id as trainer_id,
+            classes.room_id
         FROM classes
         LEFT JOIN trainers on trainers.trainer_id = classes.trainer_id
         LEFT JOIN attendance on attendance.class_id = classes.class_id
@@ -58,7 +61,8 @@ def get_classes(
                     "trainer_name": row.first + " " + row.last,
                     "type": row.type,
                     "date": row.date,
-                    "num_of_dogs_attended": row.num_dogs
+                    "num_of_dogs_attended": row.num_dogs,
+                    "room_id": row.room_id
                 }
             )
     
@@ -74,6 +78,7 @@ class ClassJson(BaseModel):
     end_hour: int
     end_minutes: int
     class_type_id: int
+    room_id: int
 
 @router.post("/classes/", tags=["classes"])
 def add_classes(new_class: ClassJson):
@@ -91,6 +96,7 @@ def add_classes(new_class: ClassJson):
         - "end_hour": int representing the hour of end_time
         - "end_minutes": int representing the minutes of end_time
     - `class_type_id`:the id of the type of class
+    - `room_id`: the id of the room the trainer wants to teach the class in
     """
 
     try:
@@ -99,8 +105,8 @@ def add_classes(new_class: ClassJson):
 
             stm = sqlalchemy.text("""
                 INSERT INTO classes 
-                (trainer_id, date, start_time, end_time, class_type_id)
-                VALUES (:trainer_id, :date, :start, :end, :class_type)
+                (trainer_id, date, start_time, end_time, class_type_id, room_id)
+                VALUES (:trainer_id, :date, :start, :end, :class_type, :room)
             """)
 
             # verify data types
@@ -114,6 +120,9 @@ def add_classes(new_class: ClassJson):
             end_time = datetime.time(db.try_parse(int, new_class.end_hour),
                                        db.try_parse(int, new_class.end_minutes))
 
+            # check that room is available at given date/time
+            rooms.find_room(class_date, start_time, end_time, conn, new_class.room_id)
+
             conn.execute(stm, [
                 { 
                     "trainer_id": new_class.trainer_id,
@@ -121,16 +130,20 @@ def add_classes(new_class: ClassJson):
                     "start": start_time,
                     "end": end_time,
                     "class_type": new_class.class_type_id,
+                    "room": new_class.room_id
                 }
             ])
 
             return "success"
-        
-    except IntegrityError:
-        print("Error returned: <<<foreign key violation>>>")
     
     except Exception as error:
-        print(f"Error returned: <<<{error}>>>")
+        if error.args != ():
+            details = (error.args)[0]
+            if "DETAIL:  " in details:
+                details = details.split("DETAIL:  ")[1].replace("\n", "")
+            raise HTTPException(status_code=404, detail=details)
+        else:
+            raise
 
 
 @router.delete("/classes/{class_id}", tags=["classes"])
@@ -140,15 +153,31 @@ def delete_class(class_id: int):
     """
     try:
         with db.engine.begin() as conn:
+            result = conn.execute(sqlalchemy.text("""SELECT class_id
+                                            FROM classes 
+                                            where class_id = :id
+                                        """), 
+                                        [{"id": class_id}]).one_or_none()
+            if result is None:
+                raise HTTPException(status_code=404, 
+                        detail=("class_id does not exist in classes table."))
 
             conn.execute(sqlalchemy.text("""DELETE 
                                         FROM classes 
                                         where class_id = :id"""), 
                                         [{"id": class_id}])
 
-        return f"success"
+        return "success"
+    
     except Exception as error:
-        print(f"Error returned: <<<{error}>>>")
+        if error.args != ():
+            details = (error.args)[0]
+            if "DETAIL:  " in details:
+                details = details.split("DETAIL:  ")[1].replace("\n", "")
+            raise HTTPException(status_code=404, detail=details)
+        else:
+            raise
+
 
 
 @router.post("/classes/{class_id}/attendance", tags=["classes"])
@@ -170,7 +199,6 @@ def add_attendance(class_id: int, dog_id: int):
 
         with db.engine.begin() as conn:
             # TODO: attendance entity and enrolled entity
-            # TODO: ON CONFLICT (dog_id, class_id) DO NOTHING? -- upsert
             stm = sqlalchemy.text("""
                 SELECT attendance_id
                 FROM attendance
@@ -183,7 +211,8 @@ def add_attendance(class_id: int, dog_id: int):
                 }
             ]).one_or_none()
             if result is not None:
-                raise HTTPException(status_code=404, detail="dog already checked into this class.")
+                raise HTTPException(status_code=404, 
+                                    detail="dog already checked into this class.")
             stm = sqlalchemy.text("""
                 INSERT INTO attendance 
                 (dog_id, class_id)
@@ -198,12 +227,16 @@ def add_attendance(class_id: int, dog_id: int):
             ])
 
             return "success"
-    
-    except IntegrityError:
-        print("Error returned: <<<foreign key violation>>>")
 
     except Exception as error:
-        print(f"Error returned: <<<{error}>>>")
+        if error.args != ():
+            details = (error.args)[0]
+            if "DETAIL:  " in details:
+                details = details.split("DETAIL:  ")[1].replace("\n", "")
+            raise HTTPException(status_code=404, detail=details)
+        else:
+            raise
+        
 
 
 @router.get("/classes/{class_id}", tags=["classes"])
@@ -219,6 +252,8 @@ def get_class(class_id: int):
     - `date`: the day the class takes place
     - `start_time`: the time the class starts
     - `end_time`: the time the class ends
+    - `room_id`: the id of the room the class takes place in
+    - `room_name`: the name of the room the class takes place in
     - `dogs_attended`: a dictionary of a dog's id, name, and checkin time
                         for the dogs that attended
     """
@@ -228,37 +263,42 @@ def get_class(class_id: int):
             class_types.type, class_types.description, 
             date, start_time, end_time,
             dogs.dog_id, dogs.dog_name, attendance.check_in,
-            trainers.trainer_id as trainer_id
+            trainers.trainer_id as trainer_id, 
+            rooms.room_id, room_name
         FROM classes
         LEFT JOIN trainers on trainers.trainer_id = classes.trainer_id
         LEFT JOIN attendance on attendance.class_id = classes.class_id
         LEFT JOIN class_types on class_types.class_type_id = classes.class_type_id
         LEFT JOIN dogs on dogs.dog_id = attendance.dog_id
+        LEFT JOIN rooms ON rooms.room_id = classes.room_id
         WHERE classes.class_id = :id  
         ORDER BY dogs.dog_id
     """)
-    # try:
     with db.engine.connect() as conn:
         result = conn.execute(stmt, [{"id": class_id}])
-        # table is used to get all the dogs attending
-        table =  result.fetchall()
-        if table == []:
+
+        dogs_attending =  result.fetchall()
+        
+        if dogs_attending == []:
             raise HTTPException(status_code=404, detail="class not found.")
-        # row1 is used to get singular class information, such as id
-        row1 = table[0]  
+        
+        class_info = dogs_attending[0]  
         json = {
-            "class_id": row1.class_id,
-            "trainer_id": row1.trainer_id,
-            "trainer_first_name": row1.first,
-            "trainer_last_name": row1.last,
-            "type": row1.type,
-            "date": row1.date,
-            "start_time": row1.start_time,
-            "end_time": row1.end_time,
+            "class_id": class_info.class_id,
+            "trainer_id": class_info.trainer_id,
+            "trainer_first_name": class_info.first,
+            "trainer_last_name": class_info.last,
+            "type": class_info.type,
+            "date": class_info.date,
+            "start_time": class_info.start_time,
+            "end_time": class_info.end_time,
+            "room_id": class_info.room_id,
+            "room_name": class_info.room_name,
             "dogs_attended": []
         }
-        if row1.dog_id is not None:
-            for row in table:            
+
+        if class_info.dog_id is not None:
+            for row in dogs_attending:            
                 json["dogs_attended"].append(
                     {
                         "dog_id": row.dog_id,
@@ -268,3 +308,101 @@ def get_class(class_id: int):
                 )
     
     return json
+
+class DayOptions(str, Enum):
+    sun = "Sunday"
+    mon = "Monday"
+    tues = "Tuesday"
+    wed = "Wednesday"
+    thurs = "Thursday"
+    fri = "Friday"
+    sat = "Saturday"    
+
+class time_options(str, Enum):
+    morning = "morning"
+    midday = "midday"
+    afternoon = "afternoon"
+
+@router.get("/classes/available/", tags=["classes"])
+def find_classes(class_type_id: int = 1,
+                 time_range: time_options = time_options.midday,                 
+                 day1: DayOptions = DayOptions.sun,
+                 day2: DayOptions = None,
+                 day3: DayOptions = None,
+                 day4: DayOptions = None,
+                 day5: DayOptions = None,
+                 day6: DayOptions = None,
+                 day7: DayOptions = None,
+                 limit: int = Query(50, ge=1, le=250)
+):                 
+    """
+    This endpoint finds classes that meet the given criteria.
+    It accepts a time range and any days of the week dog is available, 
+    and the class type the dog needs.
+    For every class, it returns:
+    - `class_id`: the id associated with the class
+    - `trainer_id: the id of the trainer
+    - `type`: the type of class
+    - `date`: the date the class takes place on
+    - `start_time`: the time the class starts
+    - `end_time`: the time the class ends
+    """
+    if time_range == "morning":
+        time_range = ("08:00:00", "11:00:00")
+    elif time_range == "midday":
+        time_range = ("11:00:00", "14:00:00")
+    else:
+        time_range = ("14:00:00", "17:00:00")
+
+    with db.engine.connect() as conn:
+        
+        valid_classes = conn.execute(sqlalchemy.text("""
+            SELECT class_id, trainer_id, type, date,
+                start_time, end_time
+            FROM classes
+            JOIN class_types ON 
+                class_types.class_type_id = classes.class_type_id
+            WHERE classes.class_type_id = :type_id AND 
+                date > CURRENT_DATE AND
+                (to_char(date, 'Day') LIKE :day1 OR
+                to_char(date, 'Day') LIKE :day2 OR
+                to_char(date, 'Day') LIKE :day3 OR
+                to_char(date, 'Day') LIKE :day4 OR
+                to_char(date, 'Day') LIKE :day5 OR
+                to_char(date, 'Day') LIKE :day6 OR
+                to_char(date, 'Day') LIKE :day7) AND
+                (CAST(:range_start AS TIME) < start_time AND 
+                    CAST(:range_end AS TIME) > end_time)
+            ORDER BY date ASC
+            LIMIT :limit
+        """), [{
+                "type_id": class_type_id,
+                "day1": f"%{day1}%",
+                "day2": f"%{day2}%",
+                "day3": f"%{day3}%",
+                "day4": f"%{day4}%",
+                "day5": f"%{day5}%",
+                "day6": f"%{day6}%",
+                "day7": f"%{day7}%",
+                "limit": limit,
+                "range_start": time_range[0],
+                "range_end": time_range[1]
+                }]).fetchall()
+        json = []
+        for row in valid_classes:
+            json.append(
+                {
+                    "class_id": row.class_id,
+                    "trainer_id": row.trainer_id,
+                    "type": row.type,
+                    "date": row.date,
+                    "start_time": row.start_time,
+                    "end_time": row.end_time
+                }
+            )
+        if json == []:
+            return "There are no classes that match this criteria."
+        return json
+    
+        
+        

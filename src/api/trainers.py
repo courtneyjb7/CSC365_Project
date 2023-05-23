@@ -22,7 +22,8 @@ def add_trainer(trainer: TrainerJson):
     - `password`: the trainer's password. Password should be 6 characters or more.
     """
     if len(trainer.password) < 6:
-        raise HTTPException(status_code=400, detail="password must be 6 or more characters.")
+        raise HTTPException(status_code=400, 
+                            detail="password must be 6 or more characters.")
     try:
         with db.engine.begin() as conn:
             stm = sqlalchemy.text("""
@@ -46,7 +47,13 @@ def add_trainer(trainer: TrainerJson):
 
             return "success"
     except Exception as error:
-        print(f"Error returned: <<<{error}>>>")
+        if error.args != ():
+            details = (error.args)[0]
+            if "DETAIL:  " in details:
+                details = details.split("DETAIL:  ")[1].replace("\n", "")
+            raise HTTPException(status_code=404, detail=details)
+        else:
+            raise
 
 
 @router.get("/trainers/{trainer_email}/{pwd}", tags=["trainers"])
@@ -111,6 +118,7 @@ def get_trainer(trainer_id: int):
 
 @router.get("/trainers/", tags=["trainers"])
 def get_trainers(
+    email: str = "",
     limit: int = Query(50, ge=1, le=250),
     offset: int = Query(0, ge=0)
 ):
@@ -119,18 +127,23 @@ def get_trainers(
     For every trainer, it returns:
     - `trainer_id`: the id associated with the trainer
     - `name`: full name of the trainer
+
+    You can set a limit and offset.
+    You can filter by trainer email. 
     """
 
     stmt = sqlalchemy.text("""                            
         SELECT trainer_id, first_name, last_name
         FROM trainers  
+        WHERE email ILIKE :email
         LIMIT :limit
         OFFSET :offset           
     """)
 
     with db.engine.connect() as conn:
         result = conn.execute(stmt, [{"offset": offset,
-                                      "limit": limit}])
+                                      "limit": limit, 
+                                      "email": f"%{email}%"}])
         json = []
         for row in result:
             json.append(
