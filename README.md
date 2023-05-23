@@ -10,3 +10,6 @@ For our project, we will create a database that contains information for a Dog T
 
 [ER Diagram](ER_Dog_Trainer_Diagram.pdf)
 
+Vercel Links:
+- Staging: https://dog-trainer-staging.vercel.app/
+- Production: https://dog-trainer-api.vercel.app/
