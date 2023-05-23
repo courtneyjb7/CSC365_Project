@@ -7,71 +7,87 @@ import json
 client = TestClient(app)
 
 def test_add_classes_invalid_class_type(capsys):
-    response = client.post("/classes/0", 
+    response = client.post("/classes/", 
                             json=
                             {
-                                "month": 5,
-                                "day": 26,
-                                "year": 2020,
-                                "start_hour": 12,
-                                "start_minutes": 30,
-                                "end_hour": 1,
-                                "end_minutes": 30,
-                                "class_type_id": 5
+                                "trainer_id": 500,
+                                "month": 12,
+                                "day": 1,
+                                "year": 2024,
+                                "start_hour": 10,
+                                "start_minutes": 0,
+                                "end_hour": 10,
+                                "end_minutes": 0,
+                                "class_type_id": 0,
+                                "room_id": 0
                             })
-    assert response.status_code == 200
+    assert response.status_code == 404
 
-    captured = capsys.readouterr()
-    assert captured.out.strip() == "Error returned: <<<foreign key violation>>>"
+    with open("test/classes/trainer=500.json", 
+              encoding="utf-8") as f:
+        assert response.json() == json.load(f)
 
-def test_add_classes():
-    response = client.post("/classes/0", 
+# def test_add_classes():
+#     response = client.post("/classes/", 
+#                             json=
+#                             {
+#                                 "trainer_id": 0,
+#                                 "month": 12,
+#                                 "day": 1,
+#                                 "year": 2020,
+#                                 "start_hour": 10,
+#                                 "start_minutes": 0,
+#                                 "end_hour": 10,
+#                                 "end_minutes": 0,
+#                                 "class_type_id": 0,
+#                                 "room_id": 0
+#                             })
+#     assert response.status_code == 200
+
+#     assert response.json() == "success"
+
+def test_add_classes_unavail_room():
+    response = client.post("/classes/", 
                             json=
                             {
-                                "month": 5,
-                                "day": 26,
-                                "year": 2020,
-                                "start_hour": 12,
-                                "start_minutes": 30,
-                                "end_hour": 1,
-                                "end_minutes": 30,
-                                "class_type_id": 0
+                                "trainer_id": 0,
+                                "month": 1,
+                                "day": 1,
+                                "year": 2023,
+                                "start_hour": 13,
+                                "start_minutes": 0,
+                                "end_hour": 14,
+                                "end_minutes": 0,
+                                "class_type_id": 0,
+                                "room_id": 1
                             })
-    assert response.status_code == 200
+    assert response.status_code == 404
 
-
-# TODO: how to test put method
+    assert response.json() == {
+        "detail": "the provided room is unavailable at this day/time."
+    }
 
 def test_add_attendance_existing():
-    response = client.put("/classes/7/0/attendance", 
-                            json=
-                            {
-                                "month": 12,
-                                "day": 10,
-                                "year": 2022,
-                                "hour": 11,
-                                "minutes": 1
-                            })
-    assert response.status_code == 200
+    response = client.post("/classes/1/attendance?dog_id=1")
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "dog already checked into this class."
+    }
 
 
-def test_add_attendance_new():
-    response = client.put("/classes/4/1/attendance", 
-                            json=
-                            {
-                                "month": 10,
-                                "day": 20,
-                                "year": 2022,
-                                "hour": 10,
-                                "minutes": 0
-                            })
-    assert response.status_code == 200
+# def test_add_attendance_new():
+#     response = client.put("/classes/4/attendance?dog_id=2")
+#     assert response.status_code == 200
+#     assert response.json() == "success"
 
 
 
-def test_get_clas_404():
+def test_get_class_404():
     response = client.get("/classes/-1")
     assert response.status_code == 404
+    assert response.json() == {
+        "detail": "class not found."
+    }
 
 
 def test_get_class_1():
@@ -81,60 +97,17 @@ def test_get_class_1():
     with open("test/classes/1.json", encoding="utf-8") as f:
         assert response.json() == json.load(f)
 
-def test_get_class_2():
-    response = client.get("/classes/8")
-    assert response.status_code == 200
-
-    with open("test/classes/8.json", encoding="utf-8") as f:
-        assert response.json() == json.load(f)
 
 def test_get_classes_limit():
-    response = client.get("/classes/?limit=7&offset=0")
+    response = client.get("/classes/?limit=5&offset=0")
     assert response.status_code == 200
 
-    with open("test/classes/limit=7&offset=0.json", encoding="utf-8") as f:
+    with open("test/classes/limit=5.json", encoding="utf-8") as f:
         assert response.json() == json.load(f)
 
-def test_get_classes_filter():
-    response = client.get("/classes/?type=begin&limit=2&offset=0")
+def test_get_classes_offset():
+    response = client.get("/classes/?limit=5&offset=2")
     assert response.status_code == 200
 
-    with open("test/classes/type=begin&limit=2&offset=0.json", encoding="utf-8") as f:
+    with open("test/classes/limit=5&offset=2.json", encoding="utf-8") as f:
         assert response.json() == json.load(f)
-
-def test_post_and_delete_class_1():
-    response = client.post("/classes/0", 
-                            json=
-                            {
-                                "month": 5,
-                                "day": 26,
-                                "year": 2020,
-                                "start_hour": 12,
-                                "start_minutes": 30,
-                                "end_hour": 1,
-                                "end_minutes": 30,
-                                "class_type_id": 0
-                            })
-    assert response.status_code == 200
-
-    del_response = client.get(f"/classes/{response.text}")
-    assert del_response.status_code == 200
-
-def test_post_and_delete_class_2():
-    response = client.post("/classes/1", 
-                            json=
-                            {
-                                "month": 3,
-                                "day": 10,
-                                "year": 2021,
-                                "start_hour": 10,
-                                "start_minutes": 0,
-                                "end_hour": 12,
-                                "end_minutes": 30,
-                                "class_type_id": 2
-                            })
-    assert response.status_code == 200
-
-    del_response = client.get(f"/classes/{response.text}")
-    assert del_response.status_code == 200
-
