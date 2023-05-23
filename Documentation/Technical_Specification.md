@@ -15,21 +15,38 @@ As a trainer, I want to be able to view important information about a dog attend
 As a dog owner/customer, I do not have access to these endpoints because the API is made for the dog trainers.
 
 ## Endpoints
+POST /trainers/
+```
+This endpoint adds a new trainer to the database. 
+    - `first_name`: first name of the trainer
+    - `last_name`: last name of the trainer
+    - `email`: the company email of the trainer
+    - `password`: the trainer's password. Password should be 6 characters or more.
+```
+GET /trainers/{trainer_email}/{pwd}
+```
+This endpoint verifies the login credentials for a trainer. Returns trainer id
+    - `trainer_email`: the email associated with the trainer
+    - `pwd`: trainer's password
+```
 GET /trainers/
 ```
 This endpoint returns all the trainers in the database. 
 For every trainer, it returns:
-    `trainer_id`: the id associated with the trainer
-    `name`: full name of the trainer
+    - `trainer_id`: the id associated with the trainer
+    - `name`: full name of the trainer
+
+You can set a limit and offset.
+You can filter by trainer email.
 ```
 GET /trainers/{trainer_id}
 ```
 This endpoint can return and update a trainer by its identifiers. 
 For each trainer, it returns:
-    `trainer_id`: the id associated with the trainer
-    `first`: first name of the trainer
-    `last`: last name of the trainer
-    `email`: the company email of the trainer
+    - `trainer_id`: the id associated with the trainer
+    - `first`: first name of the trainer
+    - `last`: last name of the trainer
+    - `email`: the company email of the trainer
 ```
 POST /classes/{trainer_id}
 ```
