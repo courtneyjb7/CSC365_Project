@@ -160,7 +160,7 @@ def delete_class(class_id: int):
                                         [{"id": class_id}]).one_or_none()
             if result is None:
                 raise HTTPException(status_code=404, 
-                                    detail=("class_id does not exist in classes table."))
+                        detail=("class_id does not exist in classes table."))
 
             conn.execute(sqlalchemy.text("""DELETE 
                                         FROM classes 

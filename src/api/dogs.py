@@ -161,7 +161,7 @@ def delete_comments(comment_id: int):
                                         [{"id": comment_id}]).one_or_none()
             if result is None:
                 raise HTTPException(status_code=404, 
-                                    detail=("comment_id does not exist in comments table."))
+                        detail=("comment_id does not exist in comments table."))
 
             conn.execute(sqlalchemy.text("""DELETE 
                                         FROM comments 
