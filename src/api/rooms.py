@@ -15,7 +15,8 @@ def verify_date_types(month, day, year,
     end_time = datetime.time(end_hour, end_minutes)
 
     return class_date, start_time, end_time
-# eventually remove endpoint and use this function in post classes?
+
+
 @router.get("/rooms/", tags=["rooms"])
 def get_room(
         month: int,
@@ -35,16 +36,17 @@ def get_room(
     max number of dogs. If the only available rooms are smaller than the class type max,
     it throws an error but says what the largest room available is.
 
-    Given:
-    - `month`: month we want to schedule class
-    - `day`: day we want to schedule class
-    - `year`: year we want to schedule class
+    The endpoint accepts:
+    - `month`: month you want to schedule class
+    - `day`: day you want to schedule class
+    - `year`: year you want to schedule class
     - `start_hour`: start_time hour
     - `start_minutes`: start_time minutes
-    - `end_hour`: end_hour hour
-    - `end_minute`: end_minute minutes
-    - `class type`: class you are interested in signing up a dog for
-    it returns:
+    - `end_hour`: end_time hour
+    - `end_minute`: end_time minutes
+    - `class type`: id of a type of class you are interested in signing a dog up for
+
+    It returns:
     - `room_id`: the id of the room in the facility that meets the class's needs
     - `room_name`: the name of the room
     - `max_dog_capacity`: the maximum number of dogs that can attend the class
@@ -121,7 +123,9 @@ capacity < given class max size. The largest room available has room_id \
 
 
 def find_room(class_date, start_time, end_time, conn, room_id):
-        
+    # This function is used by add_classes to 
+    # check that the given room is available 
+
     available_rooms = conn.execute(sqlalchemy.text("""
         SELECT room_id
         FROM rooms
@@ -143,7 +147,9 @@ def find_room(class_date, start_time, end_time, conn, room_id):
             "start_time": start_time,
             "end_time": end_time
             }]).fetchall()
+    
     room_avail = list(filter(lambda x: x[0] == room_id, available_rooms))
+
     if room_avail == []:
         raise HTTPException(status_code=404, 
                             detail="the provided room is unavailable at this day/time.")

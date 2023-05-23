@@ -125,7 +125,7 @@ def test_find_class_no_match():
     assert response.status_code == 200
     assert response.json() == "There are no classes that match this criteria."
 
-def test_find_class_no_match():
+def test_find_class():
     response = client.get("classes/available/?class_type_id=0&\
 time_range=midday&day1=Sunday&day2=Monday&day3=Thursday&limit=50")
     assert response.status_code == 200

@@ -17,8 +17,10 @@ def get_class_types(
     - `type`: the type of class
     - `description`: a description of the class
     - `max_num_dogs`: number of dogs that can be in class type
+
+    The endpoint accepts a `limit` and `offset` on the results. 
     
-    You can filter by type with the `type` query parameter. 
+    You can also filter by type with the `type` query parameter. 
     For example, "Puppy" or "Beginner".
     """
     stmt = sqlalchemy.text("""                            

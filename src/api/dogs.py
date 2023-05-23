@@ -15,8 +15,8 @@ def get_dog(dog_id: int):
     - `dog_id`: the id associated with the dog
     - `name`: the name of the dog
     - `client_email`: the email of the owner of the dog
-    - `birthday`: the dog's date of birth
-    - `breed`: the dog's breed
+    - `birthday`: the dog's date of birth (nullable)
+    - `breed`: the dog's breed (nullable)
     - `trainer_comments`: a list of comments from the 
             trainer about the dog's progress 
 
