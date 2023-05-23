@@ -277,27 +277,29 @@ def get_class(class_id: int):
     """)
     with db.engine.connect() as conn:
         result = conn.execute(stmt, [{"id": class_id}])
-        # table is used to get all the dogs attending
-        table =  result.fetchall()
-        if table == []:
+
+        dogs_attending =  result.fetchall()
+        
+        if dogs_attending == []:
             raise HTTPException(status_code=404, detail="class not found.")
-        # row1 is used to get singular class information, such as id
-        row1 = table[0]  
+        
+        class_info = dogs_attending[0]  
         json = {
-            "class_id": row1.class_id,
-            "trainer_id": row1.trainer_id,
-            "trainer_first_name": row1.first,
-            "trainer_last_name": row1.last,
-            "type": row1.type,
-            "date": row1.date,
-            "start_time": row1.start_time,
-            "end_time": row1.end_time,
-            "room_id": row1.room_id,
-            "room_name": row1.room_name,
+            "class_id": class_info.class_id,
+            "trainer_id": class_info.trainer_id,
+            "trainer_first_name": class_info.first,
+            "trainer_last_name": class_info.last,
+            "type": class_info.type,
+            "date": class_info.date,
+            "start_time": class_info.start_time,
+            "end_time": class_info.end_time,
+            "room_id": class_info.room_id,
+            "room_name": class_info.room_name,
             "dogs_attended": []
         }
-        if row1.dog_id is not None:
-            for row in table:            
+
+        if class_info.dog_id is not None:
+            for row in dogs_attending:            
                 json["dogs_attended"].append(
                     {
                         "dog_id": row.dog_id,

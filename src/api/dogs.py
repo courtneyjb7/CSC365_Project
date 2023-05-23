@@ -41,20 +41,20 @@ def get_dog(dog_id: int):
 
     with db.engine.connect() as conn:
         result = conn.execute(stmt, [{"id": dog_id}])
-        table = result.fetchall()
-        if table == []:
+        dog_comments_info = result.fetchall()
+        if dog_comments_info == []:
             raise HTTPException(status_code=404, detail="dog not found.")
-        row1 = table[0]
+        dog_info = dog_comments_info[0]
         json = {
-            "dog_id": row1.dog_id,
-            "name": row1.dog_name,
-            "client_email": row1.client_email, 
-            "birthday": row1.birthday,
-            "breed": row1.breed,
+            "dog_id": dog_info.dog_id,
+            "name": dog_info.dog_name,
+            "client_email": dog_info.client_email, 
+            "birthday": dog_info.birthday,
+            "breed": dog_info.breed,
             "trainer_comments": []
         }
-        if row1.comment_id is not None:
-            for row in table:
+        if dog_info.comment_id is not None:
+            for row in dog_comments_info:
                 json["trainer_comments"].append(
                     {
                         "comment_id": row.comment_id,
@@ -145,3 +145,36 @@ def get_dogs(
             )
 
     return json
+
+
+@router.delete("/dogs/comments/{comment_id}", tags=["dogs"])
+def delete_comments(comment_id: int):
+    """
+    This endpoint deletes a comment for a dog based on its comment ID.
+    """
+    try:
+        with db.engine.begin() as conn:
+            result = conn.execute(sqlalchemy.text("""SELECT comment_id
+                                            FROM comments 
+                                            where comment_id = :id
+                                        """), 
+                                        [{"id": comment_id}]).one_or_none()
+            if result is None:
+                raise HTTPException(status_code=404, 
+                                    detail=("comment_id does not exist in comments table."))
+
+            conn.execute(sqlalchemy.text("""DELETE 
+                                        FROM comments 
+                                        where comment_id = :id"""), 
+                                        [{"id": comment_id}])
+
+        return "success"
+    
+    except Exception as error:
+        if error.args != ():
+            details = (error.args)[0]
+            if "DETAIL:  " in details:
+                details = details.split("DETAIL:  ")[1].replace("\n", "")
+            raise HTTPException(status_code=404, detail=details)
+        else:
+            raise
