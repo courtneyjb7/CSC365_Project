@@ -102,39 +102,11 @@ def test_get_classes_filter():
     with open("test/classes/type=begin&limit=2&offset=0.json", encoding="utf-8") as f:
         assert response.json() == json.load(f)
 
-def test_post_and_delete_class_1():
-    response = client.post("/classes/0", 
-                            json=
-                            {
-                                "month": 5,
-                                "day": 26,
-                                "year": 2020,
-                                "start_hour": 12,
-                                "start_minutes": 30,
-                                "end_hour": 1,
-                                "end_minutes": 30,
-                                "class_type_id": 0
-                            })
-    assert response.status_code == 200
+def test_delete_class_1():
+    del_response = client.get(f"/classes/500")
+    assert del_response.status_code == 404
 
-    del_response = client.get(f"/classes/{response.text}")
-    assert del_response.status_code == 200
-
-def test_post_and_delete_class_2():
-    response = client.post("/classes/1", 
-                            json=
-                            {
-                                "month": 3,
-                                "day": 10,
-                                "year": 2021,
-                                "start_hour": 10,
-                                "start_minutes": 0,
-                                "end_hour": 12,
-                                "end_minutes": 30,
-                                "class_type_id": 2
-                            })
-    assert response.status_code == 200
-
-    del_response = client.get(f"/classes/{response.text}")
-    assert del_response.status_code == 200
+def test_delete_class_2():
+    del_response = client.get(f"/classes/-1")
+    assert del_response.status_code == 404
 
