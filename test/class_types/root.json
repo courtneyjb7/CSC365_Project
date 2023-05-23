@@ -1,26 +1,32 @@
 [
     {
-        "type_id": 0,
-        "type": "Puppy Training",
-        "description": "Potty training, puppy biting, barking, and basic commands will be covered.",
-        "max_num_dogs": 10
+      "type_id": 0,
+      "type": "Puppy Training",
+      "description": "Potty training, puppy biting, barking, and basic commands will be covered.",
+      "max_num_dogs": 10
     },
     {
-        "type_id": 1,
-        "type": "Beginner",
-        "description": "Dogs at the beginner level will learn basic manners and obedience techniques. ",
-        "max_num_dogs": 10
+      "type_id": 1,
+      "type": "Beginner",
+      "description": "Dogs at the beginner level will learn basic manners and obedience techniques. ",
+      "max_num_dogs": 10
     },
     {
-        "type_id": 2,
-        "type": "Intermediate",
-        "description": "Dogs at the intermediate level will enhance their skills from previous classes. ",
-        "max_num_dogs": 15
+      "type_id": 2,
+      "type": "Intermediate",
+      "description": "Dogs at the intermediate level will enhance their skills from previous classes. ",
+      "max_num_dogs": 15
     },
     {
-        "type_id": 3,
-        "type": "Advanced",
-        "description": "Dogs will learn more advanced skills and commands, including emotional support animal training. ",
-        "max_num_dogs": 20
+      "type_id": 3,
+      "type": "Advanced",
+      "description": "Dogs will learn more advanced skills and commands, including emotional support animal training. ",
+      "max_num_dogs": 20
+    },
+    {
+      "type_id": 4,
+      "type": "Dog Playdate",
+      "description": "A large group of dogs will interact and play together.",
+      "max_num_dogs": 60
     }
-]
+  ]
