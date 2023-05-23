@@ -27,7 +27,6 @@ def get_classes(
     - `num_of_dogs_attended`: the number of dogs attending the class
     - `room_id`: the id of the room the class takes place in
 
-    You can filter by type with the `type` query parameter.
     You can `limit` and `offset` the results. 
 
     Classes are sorted by date in descending order.
