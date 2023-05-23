@@ -103,8 +103,10 @@ capacity < given class max size. The largest room available has room_id \
             raise HTTPException(status_code=404, 
                                 detail="no rooms available for this date/time.")
 
+
+
 def find_room(class_date, start_time, end_time, conn, room_id):
-    
+        
     available_rooms = conn.execute(sqlalchemy.text("""
         SELECT room_id
         FROM rooms
