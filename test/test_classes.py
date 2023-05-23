@@ -76,7 +76,7 @@ def test_add_attendance_existing():
 
 
 def test_add_attendance_new():
-    response = client.put("/classes/4/attendance?dog_id=2")
+    response = client.post("/classes/4/attendance?dog_id=2")
     assert response.status_code == 200
     assert response.json() == "success"
 
@@ -118,4 +118,19 @@ def test_delete_class_1():
 def test_delete_class_2():
     del_response = client.get("/classes/-1")
     assert del_response.status_code == 404
+
+def test_find_class_no_match():
+    response = client.get("/classes/available/?class_type_id\
+=1&time_range=midday&day1=Sunday&limit=50")
+    assert response.status_code == 200
+    assert response.json() == "There are no classes that match this criteria."
+
+def test_find_class_no_match():
+    response = client.get("classes/available/?class_type_id=0&\
+time_range=midday&day1=Sunday&day2=Monday&day3=Thursday&limit=50")
+    assert response.status_code == 200
+
+    with open("test/classes/find_class.json", 
+              encoding="utf-8") as f:
+        assert response.json() == json.load(f)
 

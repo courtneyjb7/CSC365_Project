@@ -20,14 +20,14 @@ def get_classes(
     This endpoint returns all the training classes in the database. 
     For every class, it returns:
     - `class_id`: the id associated with the class
-    - `trainer_id: the id of the trainer
+    - `trainer_id`: the id of the trainer teaching the class
     - `trainer_name`: name of the trainer
     - `type`: the type of class
     - `date`: the date the class takes place on
     - `num_of_dogs_attended`: the number of dogs attending the class
     - `room_id`: the id of the room the class takes place in
 
-    You can `limit` and `offset` the results. 
+    The endpoint also accepts a `limit` and `offset` on the results. 
 
     Classes are sorted by date in descending order.
     """
@@ -86,17 +86,18 @@ def add_classes(new_class: ClassJson):
     This endpoint adds a new class to a trainer's schedule.
     - `trainer_id`: id of the trainer teaching the class
     - `date`: the day the class takes place, given by the following three values:
-        - "month": int representing month number of date
-        - "day": int representing day number of date
-        - "year": int representing year number of date
+        - `month`: int representing month number of date
+        - `day`: int representing day number of date
+        - `year`: int representing year number of date
     - `start_time`: the time the class starts, given by the following values:
-        - "start_hour": int representing the hour of start_time
-        - "start_minutes": int representing the minutes of start_time
+        - `start_hour`: int representing the hour of start_time
+        - `start_minutes`: int representing the minutes of start_time
     - `end_time`: the time the class ends, given by the following values:
-        - "end_hour": int representing the hour of end_time
-        - "end_minutes": int representing the minutes of end_time
+        - `end_hour`: int representing the hour of end_time
+        - `end_minutes`: int representing the minutes of end_time
     - `class_type_id`:the id of the type of class
     - `room_id`: the id of the room the trainer wants to teach the class in
+                (This endpoint checks that the given room is available.)
     """
 
     try:
@@ -120,7 +121,7 @@ def add_classes(new_class: ClassJson):
             end_time = datetime.time(db.try_parse(int, new_class.end_hour),
                                        db.try_parse(int, new_class.end_minutes))
 
-            # check that room is available at given date/time
+            # check that room is available at given date/time, raise error if not
             rooms.find_room(class_date, start_time, end_time, conn, new_class.room_id)
 
             conn.execute(stm, [
@@ -187,12 +188,8 @@ def add_attendance(class_id: int, dog_id: int):
     - `attendance_id`: the id of the attendance record
     - `dog_id`: the id of the dog attending
     - `class_id`: the id of the class the dog is attending
-    - `check_in`: the timestamp the dog checked in
-        - "month": int representing month number of date
-        - "day": int representing day number of date
-        - "year": int representing year number of date
-        - "hour": int representing the hour dog was checked in
-        - "minutes": int representing the minutes dog was checked in
+    - `check_in`: the timestamp the dog checked in, 
+                automatically set to the current time
     """
 
     try:
@@ -248,14 +245,18 @@ def get_class(class_id: int):
     - `description`: description of the class
     - `trainer_id`: the id of the trainer teaching the class
     - `trainer_first_name`: the first name of the trainer 
-    - `trainer_last_name`: the first name of the trainer 
+    - `trainer_last_name`: the last name of the trainer 
     - `date`: the day the class takes place
     - `start_time`: the time the class starts
     - `end_time`: the time the class ends
     - `room_id`: the id of the room the class takes place in
     - `room_name`: the name of the room the class takes place in
-    - `dogs_attended`: a dictionary of a dog's id, name, and checkin time
-                        for the dogs that attended
+    - `dogs_attended`: a list of dogs that attended the class
+    
+    For each dog, it returns:
+    - `dog_id`: the id of the dog
+    - `dog_name`: the name of the dog
+    - `check_in_time`: the time the dog checked into the class
     """
     stmt = sqlalchemy.text("""                            
         SELECT classes.class_id, trainers.first_name as first, 
@@ -337,15 +338,17 @@ def find_classes(class_type_id: int = 1,
 ):                 
     """
     This endpoint finds classes that meet the given criteria.
-    It accepts a time range and any days of the week dog is available, 
-    and the class type the dog needs.
+    It accepts a time range and list of days of the week that 
+    the dog is available, as well as the class type the dog needs.
     For every class, it returns:
     - `class_id`: the id associated with the class
-    - `trainer_id: the id of the trainer
+    - `trainer_id`: the id of the trainer teaching the class
     - `type`: the type of class
     - `date`: the date the class takes place on
     - `start_time`: the time the class starts
     - `end_time`: the time the class ends
+
+    The endpoint also accepts a `limit` on the results.
     """
     if time_range == "morning":
         time_range = ("08:00:00", "11:00:00")
