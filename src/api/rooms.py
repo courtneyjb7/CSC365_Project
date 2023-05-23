@@ -91,7 +91,8 @@ def get_room(
                     }]).fetchall()
             
             if available_rooms != []:
-                holds_class_max = list(filter(lambda x: x[1] >= class_max, available_rooms))
+                holds_class_max = list(filter(lambda x: x[1] >= class_max, 
+                                              available_rooms))
                 # avail rooms already sorted
                 if len(holds_class_max):
                     # select room_id with smallest capacity 

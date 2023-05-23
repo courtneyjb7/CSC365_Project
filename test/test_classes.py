@@ -27,24 +27,24 @@ def test_add_classes_invalid_class_type(capsys):
               encoding="utf-8") as f:
         assert response.json() == json.load(f)
 
-# def test_add_classes():
-#     response = client.post("/classes/", 
-#                             json=
-#                             {
-#                                 "trainer_id": 0,
-#                                 "month": 12,
-#                                 "day": 1,
-#                                 "year": 2020,
-#                                 "start_hour": 10,
-#                                 "start_minutes": 0,
-#                                 "end_hour": 10,
-#                                 "end_minutes": 0,
-#                                 "class_type_id": 0,
-#                                 "room_id": 0
-#                             })
-#     assert response.status_code == 200
+def test_add_classes():
+    response = client.post("/classes/", 
+                            json=
+                            {
+                                "trainer_id": 0,
+                                "month": 12,
+                                "day": 1,
+                                "year": 2020,
+                                "start_hour": 10,
+                                "start_minutes": 0,
+                                "end_hour": 10,
+                                "end_minutes": 0,
+                                "class_type_id": 0,
+                                "room_id": 0
+                            })
+    assert response.status_code == 200
 
-#     assert response.json() == "success"
+    assert response.json() == "success"
 
 def test_add_classes_unavail_room():
     response = client.post("/classes/", 
@@ -75,11 +75,10 @@ def test_add_attendance_existing():
     }
 
 
-# def test_add_attendance_new():
-#     response = client.put("/classes/4/attendance?dog_id=2")
-#     assert response.status_code == 200
-#     assert response.json() == "success"
-
+def test_add_attendance_new():
+    response = client.put("/classes/4/attendance?dog_id=2")
+    assert response.status_code == 200
+    assert response.json() == "success"
 
 
 def test_get_class_404():
