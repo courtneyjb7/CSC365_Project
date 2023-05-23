@@ -1,15 +1,21 @@
 {
-    "dog_id": 2,
-    "name": "Daisy",
-    "client_email": "person@gmail.com",
-    "birthday": "2021-07-04",
-    "breed": "Poodle",
-    "trainer_comments": [
-      {
-        "comment_id": 4,
-        "trainer": "Courtney Barber",
-        "time_added": "2023-02-03T14:00:00+00:00",
-        "text": "Needs improvement"
-      }
-    ]
-  }
+  "dog_id": 2,
+  "name": "Daisy",
+  "client_email": "person@gmail.com",
+  "birthday": "2021-07-04",
+  "breed": "Poodle",
+  "trainer_comments": [
+    {
+      "comment_id": 6,
+      "trainer": "Veronica Guzman",
+      "time_added": "2023-05-23T04:27:43.691555+00:00",
+      "text": "Good job!"
+    },
+    {
+      "comment_id": 4,
+      "trainer": "Courtney Barber",
+      "time_added": "2023-02-03T14:00:00+00:00",
+      "text": "Needs improvement"
+    }
+  ]
+}
