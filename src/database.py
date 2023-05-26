@@ -1,6 +1,7 @@
 import os
 import dotenv
 import sqlalchemy
+# from src import fake_data
 
 
 # DO NOT CHANGE THIS TO BE HARDCODED. ONLY PULL FROM ENVIRONMENT VARIABLES.
@@ -33,3 +34,5 @@ classes = sqlalchemy.Table("classes", metadata_obj, autoload_with=engine)
 class_types = sqlalchemy.Table("class_types", metadata_obj, autoload_with=engine)
 attendance = sqlalchemy.Table("attendance", metadata_obj, autoload_with=engine)
 
+# fake_data.populate_trainers()
+# fake_data.populate_dogs()

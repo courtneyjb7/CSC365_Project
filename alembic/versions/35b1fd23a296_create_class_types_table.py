@@ -20,8 +20,8 @@ def upgrade() -> None:
     op.create_table(
         'class_types',
         sa.Column('class_type_id', sa.Integer, primary_key=True),
-        sa.Column('type', sa.String(50), nullable=False),
-        sa.Column('description', sa.Unicode(200), nullable=False),
+        sa.Column('type', sa.Text, nullable=False),
+        sa.Column('description', sa.Text, nullable=False),
         sa.Column('max_num_dogs', sa.Integer, nullable=False)
     )
 

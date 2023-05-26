@@ -17,7 +17,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column('trainers', sa.Column('password', sa.String(50), nullable=False))
+    op.add_column('trainers', sa.Column('password', sa.Text, nullable=False))
 
 def downgrade() -> None:
     op.drop_column('trainers', 'password')

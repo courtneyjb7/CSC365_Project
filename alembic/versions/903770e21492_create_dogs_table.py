@@ -20,10 +20,10 @@ def upgrade() -> None:
     op.create_table(
         'dogs',
         sa.Column('dog_id', sa.Integer, primary_key=True),
-        sa.Column('client_email', sa.String(50), nullable=False),
+        sa.Column('client_email', sa.Text, nullable=False),
         sa.Column('birthday', sa.Date, nullable=False),
-        sa.Column('breed', sa.String(50), nullable=False),
-        sa.Column('dog_name', sa.String(50), nullable=False)        
+        sa.Column('breed', sa.Text, nullable=False),
+        sa.Column('dog_name', sa.Text, nullable=False)        
     )
 
 def downgrade() -> None:
