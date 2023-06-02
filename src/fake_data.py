@@ -4,6 +4,7 @@ import sqlalchemy
 import random
 import os
 import dotenv
+from datetime import timedelta, datetime
 
 def database_connection_url():
     dotenv.load_dotenv()
@@ -17,35 +18,40 @@ def database_connection_url():
 engine = sqlalchemy.create_engine(database_connection_url())
 
 fake = Faker()
-num_trainers = 2
-num_dogs = 2
-num_class_types = 5
-num_rooms = 10
+num_trainers = 20
+num_dogs = 15#1000000
+num_class_types = 5 #fixed
+num_rooms = 10 
+num_attendances = 20
+num_classes = 20
+num_comments = 20
 
 
 def populate_trainers():
     
     with engine.begin() as conn:
         try:
+            
+            trainers = []
             for _ in range(num_trainers):      
-
-                stm = sqlalchemy.text("""
-                    INSERT INTO trainers 
-                    (first_name, last_name, email, password) 
-                    VALUES (
-                        :first_name,
-                        :last_name,
-                        :email,
-                        crypt(:pwd, gen_salt('bf')) 
-                    ) RETURNING trainer_id
-                """)
-                trainer_id = conn.execute(stm, [{
+                trainers.append({
                     "first_name": fake.first_name(),
                     "last_name": fake.last_name(),
                     "email": fake.unique.email(domain="dogtrainers.com"),
-                    "pwd": "password"#fake.password(length=10)
-                }]).scalar_one()
-                # print(trainer_id)
+                    "pwd": "password"
+                })
+
+            stm = sqlalchemy.text("""
+                INSERT INTO trainers 
+                (first_name, last_name, email, password) 
+                VALUES (
+                    :first_name,
+                    :last_name,
+                    :email,
+                    crypt(:pwd, gen_salt('bf')) 
+                )
+            """)
+            conn.execute(stm, trainers)
             
         except Exception as error:
             print(error)
@@ -55,28 +61,29 @@ def populate_dogs():
     breeds = ["Basset Hound", "Beagle", "Border Collie",
               "Dobermann", "Golden Retriever", "Chihuahua",
               "Maltese", "Rottweiler", "Pug", "Poodle"]
+    
     with engine.begin() as conn:
         try:
-            for _ in range(num_dogs):      
-
-                stm = sqlalchemy.text("""
-                    INSERT INTO dogs 
-                    (client_email, birthday, breed, dog_name) 
-                    VALUES (
-                        :client_email,
-                        :birthday,
-                        :breed,
-                        :dog_name 
-                    ) RETURNING dog_id
-                """)
-                dog_id = conn.execute(stm, [{
+            dogs = []
+            for _ in range(num_dogs): 
+                dogs.append({
                     "dog_name": fake.first_name(),
                     "client_email": fake.unique.email(),
                     "birthday": fake.date_of_birth(None, 1, 20),
-                    "breed": random.choice(breeds)
-                    
-                }]).scalar_one()
-                # print(dog_id)
+                    "breed": random.choice(breeds) 
+                })
+
+            stm = sqlalchemy.text("""
+                INSERT INTO dogs 
+                (client_email, birthday, breed, dog_name) 
+                VALUES (
+                    :client_email,
+                    :birthday,
+                    :breed,
+                    :dog_name
+                )
+            """)
+            conn.execute(stm, dogs)
             
         except Exception as error:
             print(error)
@@ -150,51 +157,105 @@ def populate_rooms():
         except Exception as error:
             print(error)
 
+def populate_attendance():
+    with engine.begin() as conn:    
+        try:
+            attendances = []
+            for _ in range(num_attendances): 
+                attendances.append({
+                    "dog_id": random.randint(1, num_dogs),
+                    "class_id": random.randint(1, num_classes),
+                    "check_in": fake.date_time_between()
+                })
+
+            stm = sqlalchemy.text("""
+                INSERT INTO attendance
+                (dog_id, class_id, check_in) 
+                VALUES (
+                    :dog_id,
+                    :class_id,
+                    :check_in
+                )
+            """)
+            conn.execute(stm, attendances)
+        
+        except Exception as error:
+            print(error)
+
+def populate_classes():
+    with engine.begin() as conn:
+        try:
+            
+            classes = []
+            for _ in range(num_trainers):  
+                # start_time = fake.time_object()
+                s_time = datetime(2022, 1, 1, random.randint(0, 23), random.choice([0, 30]), 0)
+                time_change = timedelta(hours=random.randint(1, 3))
+                end_time = s_time + time_change
+
+                classes.append({
+                    "trainer_id": random.randint(1, num_trainers),
+                    "date": fake.date_time_between(start_date='-20y', end_date='+3y'),
+                    "start_time": s_time,#start_time,
+                    "end_time": end_time,#start_time.timedelta(hours=1),
+                    "class_type_id": random.randint(1, num_class_types),
+                    "room_id": random.randint(1, num_rooms)
+                })
+
+            stm = sqlalchemy.text("""
+                INSERT INTO classes
+                (trainer_id, date, start_time, end_time, class_type_id, room_id) 
+                VALUES (
+                    :trainer_id, 
+                    :date, 
+                    :start_time, 
+                    :end_time, 
+                    :class_type_id, 
+                    :room_id
+                )
+            """)
+            conn.execute(stm, classes)
+            
+        except Exception as error:
+            print(error)
+
+def populate_comments():
+    with engine.begin() as conn:    
+        try:
+            comments = []
+            text_options = ["Much improvement.",
+                            "Learned many basic commands today!" ,
+                            "Very well behaved dog!",
+                            "Ready to move into a more advanced class.",
+                            "Still working on patience.",
+                            "Needs potty training."]
+            for _ in range(num_comments): 
+                comments.append({
+                    "dog_id": random.randint(1, num_dogs),
+                    "trainer_id": random.randint(1, num_trainers),
+                    "comment_text": random.choice(text_options),
+                    "time_added": fake.date_time_between()
+                })
+
+            stm = sqlalchemy.text("""
+                INSERT INTO comments
+                (dog_id, trainer_id, comment_text, time_added) 
+                VALUES (
+                    :dog_id,
+                    :trainer_id,
+                    :comment_text,
+                    :time_added
+                )
+            """)
+            conn.execute(stm, comments)
+        
+        except Exception as error:
+            print(error)
+
 populate_trainers()     
 populate_dogs()
 populate_class_types()
 populate_rooms()
-######################################################
-# num_users = 200000
-# posts_sample_distribution = np.random.default_rng().negative_binomial(0.04, 0.01, num_users)
-# category_sample_distribution = np.random.choice([1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-#                                                  num_users,
-#                                                 p=[0.1, 0.05, 0.1, 0.3, 0.05, 0.05, 0.05, 0.05, 0.15, 0.1])
-# total_posts = 0
-# with engine.begin() as conn:
-#     print("creating fake posters...")
-#     posts = []
-#     for i in range(num_users):
-#         if (i % 10 == 0):
-#             print(i)
-        
-#         profile = fake.profile()
-#         username = fake.unique.email()
-#         device_type = fake.random_element(elements=('Android', 'iOS', 'Web'))
-
-#         poster_id = conn.execute(sqlalchemy.text("""
-#         INSERT INTO users (username, full_name, birthday, device_type) VALUES (:username, :name, :birthday, :device_type) RETURNING id;
-#         """), {"username": username, "name": profile['name'], "birthday": profile['birthdate'], "device_type": device_type}).scalar_one();
-
-#         num_posts = posts_sample_distribution[i]
-#         likes_sample_distribution = np.random.default_rng().negative_binomial(0.8, 0.0001, num_posts)  
-#         for j in range(num_posts):
-#             total_posts += 1
-#             posts.append({
-#                 "title": fake.sentence(),
-#                 "content": fake.text(),
-#                 "poster_id": poster_id,
-#                 "category_id": category_sample_distribution[i].item(),
-#                 "visible": fake.boolean(75),
-#                 "created_at": fake.date_time_between(start_date='-5y', end_date='now', tzinfo=None),
-#                 "likes": likes_sample_distribution[j].item(),
-#                 "nsfw": fake.boolean(10)
-#             })
-
-#     if posts:
-#         conn.execute(sqlalchemy.text("""
-#         INSERT INTO posts (title, content, poster_id, category_id, visible, created_at) 
-#         VALUES (:title, :content, :poster_id, :category_id, :visible, :created_at);
-#         """), posts)
-
-#     print("total posts: ", total_posts)
+populate_classes()
+populate_attendance()
+populate_comments()
