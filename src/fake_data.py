@@ -19,12 +19,12 @@ engine = sqlalchemy.create_engine(database_connection_url())
 
 fake = Faker()
 num_trainers = 20
-num_dogs = 15#1000000
+num_dogs = 150000
 num_class_types = 5 #fixed
 num_rooms = 10 
-num_attendances = 20
-num_classes = 20
-num_comments = 20
+num_attendances = 350000
+num_classes = 150000
+num_comments = 350000
 
 
 def populate_trainers():
