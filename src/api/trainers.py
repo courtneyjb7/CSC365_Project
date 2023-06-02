@@ -35,17 +35,18 @@ def add_trainer(trainer: TrainerJson):
                     :email,
                     crypt(:pwd, gen_salt('bf'))
                 )
+                RETURNING trainer_id
             """)
-            conn.execute(stm, [
+            trainer_id = conn.execute(stm, [
                 {
                     "first": trainer.first_name,
                     "last": trainer.last_name,
                     "email": trainer.email,
                     "pwd": trainer.password
                 }
-            ])
+            ]).scalar_one()
 
-            return "success"
+            return trainer_id
     except Exception as error:
         if error.args != ():
             details = (error.args)[0]
@@ -56,8 +57,12 @@ def add_trainer(trainer: TrainerJson):
             raise
 
 
-@router.get("/trainers/{trainer_email}/{pwd}", tags=["trainers"])
-def verify_password(trainer_email: str, pwd: str):
+class TrainerCheck(BaseModel):
+    trainer_email: str
+    pwd: str
+
+@router.post("/trainers/login/", tags=["trainers"])
+def verify_password(trainer: TrainerCheck):
     """
     This endpoint verifies the login credentials for a trainer. Returns trainer id
     - `trainer_email`: the email associated with the trainer
@@ -67,13 +72,13 @@ def verify_password(trainer_email: str, pwd: str):
     check_valid = sqlalchemy.text(
                     """SELECT trainer_id 
                         FROM trainers
-                        WHERE email = :email 
+                        WHERE email ILIKE :email 
                         AND password = crypt(:pwd, password)""")
     
     with db.engine.begin() as conn:
         result = conn.execute(check_valid, [
-            {"email": trainer_email,
-             "pwd": pwd}
+            {"email": trainer.trainer_email,
+             "pwd": trainer.pwd}
              ]).one_or_none()
         
         if result is None:

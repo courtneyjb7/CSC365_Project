@@ -91,15 +91,16 @@ def add_comments(dog_id: int, new_comment: CommentJson):
                 INSERT INTO comments
                 ( dog_id, trainer_id, comment_text)
                 VALUES (:dog_id, :trainer_id, :text)
+                RETURNING comment_id
             """)
 
-            conn.execute(stmt, [{
+            comment_id = conn.execute(stmt, [{
                 "dog_id": dog_id,
                 "trainer_id": db.try_parse(int, new_comment.trainer_id), 
                 "text": new_comment.comment_text
-            }])
+            }]).scalar_one()
 
-        return "success" 
+        return comment_id 
     
     except Exception as error:
         if error.args != ():

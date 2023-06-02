@@ -107,6 +107,7 @@ def add_classes(new_class: ClassJson):
                 INSERT INTO classes 
                 (trainer_id, date, start_time, end_time, class_type_id, room_id)
                 VALUES (:trainer_id, :date, :start, :end, :class_type, :room)
+                RETURNING class_id
             """)
 
             # verify data types
@@ -123,7 +124,7 @@ def add_classes(new_class: ClassJson):
             # check that room is available at given date/time
             rooms.find_room(class_date, start_time, end_time, conn, new_class.room_id)
 
-            conn.execute(stm, [
+            class_id = conn.execute(stm, [
                 { 
                     "trainer_id": new_class.trainer_id,
                     "date": class_date,
@@ -132,9 +133,9 @@ def add_classes(new_class: ClassJson):
                     "class_type": new_class.class_type_id,
                     "room": new_class.room_id
                 }
-            ])
+            ]).scalar_one()
 
-            return "success"
+            return class_id
     
     except Exception as error:
         if error.args != ():
