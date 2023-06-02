@@ -19,12 +19,16 @@ engine = sqlalchemy.create_engine(database_connection_url())
 
 fake = Faker()
 num_trainers = 20
-num_dogs = 150000
 num_class_types = 5 #fixed
 num_rooms = 10 
-num_attendances = 350000
-num_classes = 150000
-num_comments = 350000
+# num_dogs = 150000
+# num_attendances = 350000
+# num_classes = 150000
+# num_comments = 350000
+num_dogs = 50
+num_attendances = 70
+num_classes = 70
+num_comments = 100
 
 
 def populate_trainers():
@@ -187,7 +191,7 @@ def populate_classes():
         try:
             
             classes = []
-            for _ in range(num_trainers):  
+            for _ in range(num_classes):  
                 # start_time = fake.time_object()
                 s_time = datetime(2022, 1, 1, random.randint(0, 23), random.choice([0, 30]), 0)
                 time_change = timedelta(hours=random.randint(1, 3))
