@@ -79,18 +79,17 @@ class ClassJson(BaseModel):
     end_minutes: int
     class_type_id: int
     room_id: int
+    date: str
 
 @router.post("/classes/", tags=["classes"])
 def add_classes(new_class: ClassJson):
     """
     This endpoint adds a new class to a trainer's schedule.
     - `trainer_id`: id of the trainer teaching the class
-    - `date`: the day the class takes place, given by the following three values:
-        - "month": int representing month number of date
-        - "day": int representing day number of date
-        - "year": int representing year number of date
+    - `date`: the day the class takes place, given by:
+        - "yyyy-mm-dd": provide a string with the year, month, and day seperated by hyphen (-)
     - `start_time`: the time the class starts, given by the following values:
-        - "start_hour": int representing the hour of start_time
+        - "start_hour": int representing the hour of start_time 
         - "start_minutes": int representing the minutes of start_time
     - `end_time`: the time the class ends, given by the following values:
         - "end_hour": int representing the hour of end_time
@@ -110,10 +109,13 @@ def add_classes(new_class: ClassJson):
                 RETURNING class_id
             """)
 
+            # convert from string format to datetime format
+            class_date = datetime.datetime.strptime(new_class.date, "%Y-%m-%d").date()
+
             # verify data types
-            class_date = datetime.date(db.try_parse(int, new_class.year),
-                                       db.try_parse(int, new_class.month),
-                                       db.try_parse(int, new_class.day))
+            # class_date = datetime.date(db.try_parse(int, new_class.year),
+            #                            db.try_parse(int, new_class.month),
+            #                            db.try_parse(int, new_class.day))
             
             start_time = datetime.time(db.try_parse(int, new_class.start_hour),
                                        db.try_parse(int, new_class.start_minutes))
