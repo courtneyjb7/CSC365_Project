@@ -64,14 +64,6 @@ def get_room(
             
             class_max = result.max_num_dogs
 
-            # date, start, end = verify_date_types(month, 
-            #                                     day, 
-            #                                     year, 
-            #                                     start_hour, 
-            #                                     start_minutes, 
-            #                                     end_hour, 
-            #                                     end_minutes)
-
             available_rooms = conn.execute(sqlalchemy.text("""
                 SELECT room_id, max_dog_capacity, room_name
                 FROM rooms
@@ -97,10 +89,10 @@ def get_room(
                 holds_class_max = list(filter(lambda x: x[1] >= class_max, 
                                               available_rooms))
                 # avail rooms already sorted
+
                 if len(holds_class_max):
                     # select room_id with smallest capacity 
                     # that fits class max if one exists
-                    # room = holds_class_max[0][0]
                     room = {
                         "room_id": holds_class_max[0][0],
                         "room_name": holds_class_max[0][2],
@@ -110,25 +102,31 @@ def get_room(
                     return room
                 else: 
                     # if no room that hold class max size, select largest room
-                    # room = available_rooms[-1]
                     room = {
                         "room_id": available_rooms[-1][0],
                         "room_name": available_rooms[-1][2],
                         "max_dog_capacity": available_rooms[-1][1],
                         "max_class_size": class_max
                     }
+
                     raise HTTPException(status_code=404, 
                             detail=f"""the only rooms available have a max room \
 capacity < given class max size. The largest room available is {room}""")
+                
             else:
                 raise HTTPException(status_code=404, 
                                     detail="no rooms available for this date/time.")
+            
     except Exception as error:
+
         if error.args != ():
             details = (error.args)[0]
+
             if "DETAIL:  " in details:
                 details = details.split("DETAIL:  ")[1].replace("\n", "")
+
             raise HTTPException(status_code=404, detail=details)
+        
         else:
             raise
 
