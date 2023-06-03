@@ -70,16 +70,12 @@ def get_classes(
 
 class ClassJson(BaseModel):
     trainer_id: int
-    month: int
-    day: int
-    year: int
-    start_hour: int
-    start_minutes: int
-    end_hour: int
-    end_minutes: int
+    date: str = "yyyy-mm-dd"
+    start_time: str = "hh:mm AM/PM"
+    end_time: str = "hh:mm"
     class_type_id: int
     room_id: int
-    date: str
+    
 
 @router.post("/classes/", tags=["classes"])
 def add_classes(new_class: ClassJson):
@@ -88,12 +84,10 @@ def add_classes(new_class: ClassJson):
     - `trainer_id`: id of the trainer teaching the class
     - `date`: the day the class takes place, given by:
         - "yyyy-mm-dd": provide a string with the year, month, and day seperated by hyphen (-)
-    - `start_time`: the time the class starts, given by the following values:
-        - "start_hour": int representing the hour of start_time 
-        - "start_minutes": int representing the minutes of start_time
+    - `start_time`: the time the class starts, given by:
+        - "hh:mm AM/PM": provide a string with the hour and minutes seperated with a colon, as well as an indication whether time is AM or PM
     - `end_time`: the time the class ends, given by the following values:
-        - "end_hour": int representing the hour of end_time
-        - "end_minutes": int representing the minutes of end_time
+        - "hh:mm AM/PM": provide a string with the hour and minutes seperated with a colon, as well as an indication whether time is AM or PM
     - `class_type_id`:the id of the type of class
     - `room_id`: the id of the room the trainer wants to teach the class in
     """
@@ -111,17 +105,8 @@ def add_classes(new_class: ClassJson):
 
             # convert from string format to datetime format
             class_date = datetime.datetime.strptime(new_class.date, "%Y-%m-%d").date()
-
-            # verify data types
-            # class_date = datetime.date(db.try_parse(int, new_class.year),
-            #                            db.try_parse(int, new_class.month),
-            #                            db.try_parse(int, new_class.day))
-            
-            start_time = datetime.time(db.try_parse(int, new_class.start_hour),
-                                       db.try_parse(int, new_class.start_minutes))
-            
-            end_time = datetime.time(db.try_parse(int, new_class.end_hour),
-                                       db.try_parse(int, new_class.end_minutes))
+            start_time = datetime.datetime.strptime(new_class.start_time, "%I:%M %p").time()
+            end_time = datetime.datetime.strptime(new_class.end_time, "%I:%M %p").time()
 
             # check that room is available at given date/time
             rooms.find_room(class_date, start_time, end_time, conn, new_class.room_id)
