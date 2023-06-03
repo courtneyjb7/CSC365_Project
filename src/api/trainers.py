@@ -3,6 +3,7 @@ from src import database as db
 import sqlalchemy
 from fastapi.params import Query
 from pydantic import BaseModel
+import re
 
 router = APIRouter()
 
@@ -24,6 +25,12 @@ def add_trainer(trainer: TrainerJson):
     if len(trainer.password) < 6:
         raise HTTPException(status_code=400, 
                             detail="password must be 6 or more characters.")
+    
+
+    if not re.search("^[\w\.]+@([\w-]+\.)+[\w-]{2,4}$", trainer.email):
+        raise HTTPException(status_code=400, 
+                            detail="invalid email")
+
     try:
         with db.engine.begin() as conn:
             stm = sqlalchemy.text("""
@@ -132,13 +139,14 @@ def get_trainers(
     For every trainer, it returns:
     - `trainer_id`: the id associated with the trainer
     - `name`: full name of the trainer
+    - `email`: the trainer's email
 
     You can set a limit and offset.
     You can filter by trainer email. 
     """
 
     stmt = sqlalchemy.text("""                            
-        SELECT trainer_id, first_name, last_name
+        SELECT trainer_id, first_name, last_name, email
         FROM trainers  
         WHERE email ILIKE :email
         LIMIT :limit
@@ -154,7 +162,8 @@ def get_trainers(
             json.append(
                 {
                     "trainer_id": row.trainer_id,
-                    "name": row.first_name + " " + row.last_name 
+                    "name": row.first_name + " " + row.last_name ,
+                    "email": row.email
                 }
             )
 

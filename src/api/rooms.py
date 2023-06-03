@@ -18,14 +18,10 @@ def verify_date_types(month, day, year,
 # eventually remove endpoint and use this function in post classes?
 @router.get("/rooms/", tags=["rooms"])
 def get_room(
-        month: int,
-        day: int,
-        year: int,
-        start_hour: int,
-        start_minutes: int,
-        end_hour: int,
-        end_minutes: int,
-        class_type_id: int
+        class_type_id: int,
+        date: str = "yyyy-mm-dd",
+        start_time: str = "hh:mm AM",
+        end_time: str = "hh:mm AM"        
     ):
     """
     This endpoint returns a room_id of a room in the facility that best meets the
@@ -36,14 +32,15 @@ def get_room(
     it throws an error but says what the largest room available is.
 
     Given:
-    - `month`: month we want to schedule class
-    - `day`: day we want to schedule class
-    - `year`: year we want to schedule class
-    - `start_hour`: start_time hour
-    - `start_minutes`: start_time minutes
-    - `end_hour`: end_hour hour
-    - `end_minute`: end_minute minutes
     - `class type`: class you are interested in signing up a dog for
+    - `date`: the day the class takes place, given by:
+        - "yyyy-mm-dd": provide a string with the year, month, and day seperated by hyphen (-)
+    - `start_time`: the time the class starts, given by:
+        - "hh:mm AM/PM": provide a string with the hour and minutes seperated with a colon, 
+        as well as an indication whether time is AM or PM
+    - `end_time`: the time the class ends, given by:
+        - "hh:mm AM/PM": provide a string with the hour and minutes seperated with a colon, 
+        as well as an indication whether time is AM or PM
     it returns:
     - `room_id`: the id of the room in the facility that meets the class's needs
     - `room_name`: the name of the room
@@ -51,7 +48,11 @@ def get_room(
     """
     try:
         with db.engine.connect() as conn:
-
+            
+            date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+            start_time = datetime.datetime.strptime(start_time, "%I:%M %p").time()
+            end_time = datetime.datetime.strptime(end_time, "%I:%M %p").time()
+            
             result = conn.execute(sqlalchemy.text("""
                 SELECT max_num_dogs
                 FROM class_types
@@ -62,13 +63,13 @@ def get_room(
             
             class_max = result.max_num_dogs
 
-            date, start, end = verify_date_types(month, 
-                                                day, 
-                                                year, 
-                                                start_hour, 
-                                                start_minutes, 
-                                                end_hour, 
-                                                end_minutes)
+            # date, start, end = verify_date_types(month, 
+            #                                     day, 
+            #                                     year, 
+            #                                     start_hour, 
+            #                                     start_minutes, 
+            #                                     end_hour, 
+            #                                     end_minutes)
 
             available_rooms = conn.execute(sqlalchemy.text("""
                 SELECT room_id, max_dog_capacity
@@ -86,8 +87,8 @@ def get_room(
                 ORDER BY max_dog_capacity ASC
             """), [{
                     "date": date,
-                    "start_time": start,
-                    "end_time": end
+                    "start_time": start_time,
+                    "end_time": end_time
                     }]).fetchall()
             
             if available_rooms != []:

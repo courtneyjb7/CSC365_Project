@@ -175,18 +175,11 @@ def add_attendance(class_id: int, dog_id: int):
     - `attendance_id`: the id of the attendance record
     - `dog_id`: the id of the dog attending
     - `class_id`: the id of the class the dog is attending
-    - `check_in`: the timestamp the dog checked in
-        - "month": int representing month number of date
-        - "day": int representing day number of date
-        - "year": int representing year number of date
-        - "hour": int representing the hour dog was checked in
-        - "minutes": int representing the minutes dog was checked in
     """
 
     try:
 
         with db.engine.begin() as conn:
-            # TODO: attendance entity and enrolled entity
             stm = sqlalchemy.text("""
                 SELECT attendance_id
                 FROM attendance
