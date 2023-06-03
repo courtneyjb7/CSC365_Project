@@ -122,7 +122,7 @@ def add_classes(new_class: ClassJson):
                 }
             ]).scalar_one()
 
-            return class_id
+            return "class_id added: " + class_id
     
     except Exception as error:
         if error.args != ():

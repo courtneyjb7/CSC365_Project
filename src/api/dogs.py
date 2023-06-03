@@ -100,7 +100,7 @@ def add_comments(dog_id: int, new_comment: CommentJson):
                 "text": new_comment.comment_text
             }]).scalar_one()
 
-        return comment_id 
+        return "comments_id added: " + comment_id 
     
     except Exception as error:
         if error.args != ():

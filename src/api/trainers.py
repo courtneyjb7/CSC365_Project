@@ -3,7 +3,8 @@ from src import database as db
 import sqlalchemy
 from fastapi.params import Query
 from pydantic import BaseModel
-import re
+# import re
+from email_validator import validate_email, EmailNotValidError
 
 router = APIRouter()
 
@@ -27,9 +28,11 @@ def add_trainer(trainer: TrainerJson):
                             detail="password must be 6 or more characters.")
     
 
-    if not re.search("^[\w\.]+@([\w-]+\.)+[\w-]{2,4}$", trainer.email):
-        raise HTTPException(status_code=400, 
-                            detail="invalid email")
+    # if not re.search("^[\w\.]+@([\w-]+\.)+[\w-]{2,4}$", trainer.email):
+    #     raise HTTPException(status_code=400, 
+    #                         detail="invalid email")
+    emailinfo = validate_email(trainer.email, check_deliverability=False)
+    email = emailinfo.normalized
 
     try:
         with db.engine.begin() as conn:
@@ -48,13 +51,19 @@ def add_trainer(trainer: TrainerJson):
                 {
                     "first": trainer.first_name,
                     "last": trainer.last_name,
-                    "email": trainer.email,
+                    "email": email,
                     "pwd": trainer.password
                 }
             ]).scalar_one()
 
-            return trainer_id
+            return "trainer_id added: " + trainer_id
+    #TODO: fix internal server error: 
+    #   EmailSyntaxError("The email address is not valid. It must have exactly one @-sign.")
+    except EmailNotValidError as e:
+        raise HTTPException(status_code=400, 
+                            detail=f"{e}")
     except Exception as error:
+        print("hello")
         if error.args != ():
             details = (error.args)[0]
             if "DETAIL:  " in details:
