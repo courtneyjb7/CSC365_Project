@@ -122,7 +122,7 @@ def add_classes(new_class: ClassJson):
                 }
             ]).scalar_one()
 
-            return "class_id added: " + class_id
+            return f"class_id added: {class_id}"
     
     except Exception as error:
         if error.args != ():
@@ -197,17 +197,17 @@ def add_attendance(class_id: int, dog_id: int):
             stm = sqlalchemy.text("""
                 INSERT INTO attendance 
                 (dog_id, class_id)
-                VALUES (:dog_id, :class_id)                
+                VALUES (:dog_id, :class_id) RETURNING attendance_id               
             """)
 
-            conn.execute(stm, [
+            attendance_id = conn.execute(stm, [
                 {
                     "dog_id": dog_id,
                     "class_id": class_id,
                 }
             ])
 
-            return "success"
+            return f"attendance_id added: {attendance_id}" 
 
     except Exception as error:
         if error.args != ():

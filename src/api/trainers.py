@@ -56,7 +56,7 @@ def add_trainer(trainer: TrainerJson):
                 }
             ]).scalar_one()
 
-            return "trainer_id added: " + trainer_id
+            return f"trainer_id added: {trainer_id}" 
     #TODO: fix internal server error: 
     #   EmailSyntaxError("The email address is not valid. It must have exactly one @-sign.")
     except EmailNotValidError as e:
