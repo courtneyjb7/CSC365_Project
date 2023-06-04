@@ -95,38 +95,39 @@ def add_classes(new_class: ClassJson):
 
     try:
 
-        with db.engine.begin() as conn:
+        with db.engine.connect().execution_options(isolation_level="SERIALIZABLE") as conn:
+            with conn.begin():
 
-            stm = sqlalchemy.text("""
-                INSERT INTO classes 
-                (trainer_id, date, start_time, end_time, class_type_id, room_id)
-                VALUES (:trainer_id, :date, :start, :end, :class_type, :room)
-                RETURNING class_id
-            """)
+                stm = sqlalchemy.text("""
+                    INSERT INTO classes 
+                    (trainer_id, date, start_time, end_time, class_type_id, room_id)
+                    VALUES (:trainer_id, :date, :start, :end, :class_type, :room)
+                    RETURNING class_id
+                """)
 
-            # convert from string format to datetime format
-            class_date = datetime.datetime.strptime(new_class.date, "%Y-%m-%d").date()
-            start_time = datetime.datetime.strptime(new_class.start_time, "%I:%M %p").time()
-            end_time = datetime.datetime.strptime(new_class.end_time, "%I:%M %p").time()
-            
-            if end_time < start_time:                                
-                raise HTTPException(status_code=404, detail="end_time should be after start_time")
+                # convert from string format to datetime format
+                class_date = datetime.datetime.strptime(new_class.date, "%Y-%m-%d").date()
+                start_time = datetime.datetime.strptime(new_class.start_time, "%I:%M %p").time()
+                end_time = datetime.datetime.strptime(new_class.end_time, "%I:%M %p").time()
                 
-            # check that room is available at given date/time
-            rooms.find_room(class_date, start_time, end_time, conn, new_class.room_id)
+                if end_time < start_time:                                
+                    raise HTTPException(status_code=404, detail="end_time should be after start_time")
+                    
+                # check that room is available at given date/time
+                rooms.find_room(class_date, start_time, end_time, conn, new_class.room_id)
 
-            class_id = conn.execute(stm, [
-                { 
-                    "trainer_id": new_class.trainer_id,
-                    "date": class_date,
-                    "start": start_time,
-                    "end": end_time,
-                    "class_type": new_class.class_type_id,
-                    "room": new_class.room_id
-                }
-            ]).scalar_one()
+                class_id = conn.execute(stm, [
+                    { 
+                        "trainer_id": new_class.trainer_id,
+                        "date": class_date,
+                        "start": start_time,
+                        "end": end_time,
+                        "class_type": new_class.class_type_id,
+                        "room": new_class.room_id
+                    }
+                ]).scalar_one()
 
-            return f"class_id added: {class_id}"
+                return f"class_id added: {class_id}"
     
     except Exception as error:
         if error.args != ():
@@ -144,22 +145,23 @@ def delete_class(class_id: int):
     This endpoint deletes a class based on its class ID.
     """
     try:
-        with db.engine.begin() as conn:
-            result = conn.execute(sqlalchemy.text("""SELECT class_id
+        with db.engine.connect().execution_options(isolation_level="SERIALIZABLE") as conn:
+            with conn.begin():
+                result = conn.execute(sqlalchemy.text("""SELECT class_id
+                                                FROM classes 
+                                                where class_id = :id
+                                            """), 
+                                            [{"id": class_id}]).one_or_none()
+                if result is None:
+                    raise HTTPException(status_code=404, 
+                            detail=("class_id does not exist in classes table."))
+
+                conn.execute(sqlalchemy.text("""DELETE 
                                             FROM classes 
-                                            where class_id = :id
-                                        """), 
-                                        [{"id": class_id}]).one_or_none()
-            if result is None:
-                raise HTTPException(status_code=404, 
-                        detail=("class_id does not exist in classes table."))
+                                            where class_id = :id"""), 
+                                            [{"id": class_id}])
 
-            conn.execute(sqlalchemy.text("""DELETE 
-                                        FROM classes 
-                                        where class_id = :id"""), 
-                                        [{"id": class_id}])
-
-        return f"class_id deleted: {class_id}"
+                return f"class_id deleted: {class_id}"
     
     except Exception as error:
         if error.args != ():
