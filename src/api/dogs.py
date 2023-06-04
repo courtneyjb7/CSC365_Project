@@ -7,12 +7,12 @@ from fastapi.params import Query
 router = APIRouter()
 
 
-@router.get("/dogs/{dog_id}", tags=["dogs"])
-def get_dog(dog_id: int):
+@router.get("/dogs/{id}", tags=["dogs"])
+def get_dog(id: int):
     """
     This endpoint returns information about a dog in the database. 
     For every dog, it returns:
-    - `dog_id`: the id associated with the dog
+    - `id`: the id associated with the dog
     - `name`: the name of the dog
     - `client_email`: the email of the owner of the dog
     - `birthday`: the dog's date of birth
@@ -38,9 +38,15 @@ def get_dog(dog_id: int):
         WHERE dogs.dog_id = :id
         ORDER BY comments.time_added desc
     """)
+    attendance_stmt = sqlalchemy.text("""                            
+        SELECT class_id, check_in
+        FROM attendance
+        WHERE dog_id = :id
+        ORDER BY class_id
+    """)
 
     with db.engine.connect() as conn:
-        result = conn.execute(stmt, [{"id": dog_id}])
+        result = conn.execute(stmt, [{"id": id}])
         dog_comments_info = result.fetchall()
         if dog_comments_info == []:
             raise HTTPException(status_code=404, detail="dog not found.")
@@ -51,7 +57,8 @@ def get_dog(dog_id: int):
             "client_email": dog_info.client_email, 
             "birthday": dog_info.birthday,
             "breed": dog_info.breed,
-            "trainer_comments": []
+            "trainer_comments": [],
+            "classes_attended": []
         }
         if dog_info.comment_id is not None:
             for row in dog_comments_info:
@@ -63,20 +70,29 @@ def get_dog(dog_id: int):
                         "text": row.comment_text
                     }
                 )
+        dog_attendance = conn.execute(attendance_stmt, [{"id": id}]).fetchall()
+        for row in dog_attendance:
+            json["classes_attended"].append(
+                {
+                    "class_id": row.class_id,
+                    "check_in": row.check_in
+                }
+            )
     
     return json
 
 
 class CommentJson(BaseModel):
     trainer_id: int
+    class_id: int
     comment_text: str
 
 
-@router.post("/dogs/{dog_id}/comments", tags=["dogs"])
-def add_comments(dog_id: int, new_comment: CommentJson):
+@router.post("/dogs/{id}/comments", tags=["dogs"])
+def add_comments(id: int, new_comment: CommentJson):
     """
     This endpoint updates trainer comments for a dog. 
-    - `dog_id`: the id of the dog the comment is about
+    - `id`: the id of the dog the comment is about
 
     Provide a body json with the following information:
     - `trainer_id`: the id of the trainer who made the comment
@@ -95,7 +111,7 @@ def add_comments(dog_id: int, new_comment: CommentJson):
             """)
 
             comment_id = conn.execute(stmt, [{
-                "dog_id": dog_id,
+                "dog_id": id,
                 "trainer_id": db.try_parse(int, new_comment.trainer_id), 
                 "text": new_comment.comment_text
             }]).scalar_one()
@@ -114,6 +130,8 @@ def add_comments(dog_id: int, new_comment: CommentJson):
 @router.get("/dogs/", tags=["dogs"])
 def get_dogs(
     name: str = "", 
+    breed: str = "",
+    client_email: str = "",
     limit: int = Query(50, ge=1, le=250),
     offset: int = Query(0, ge=0)
 ):
@@ -122,18 +140,25 @@ def get_dogs(
     For every dog, it returns:
     - `dog_id`: the id associated with the dog
     - `dog_name`: the name of the dog
-    """
+    - `birthday`: the birthday of the dog
+    - `breed`: the dog's breed
+    - `client_email`: the email of the owner of the dog
+     """
 
     stmt = sqlalchemy.text("""                            
-        SELECT dog_id, dog_name
+        SELECT dog_id, dog_name, birthday, breed, client_email
         FROM dogs 
-        WHERE dog_name ILIKE :name
+        WHERE dog_name ILIKE :name 
+        AND breed ILIKE :breed
+        AND client_email ILIKE :client_email
         OFFSET :offset         
         LIMIT :limit            
     """)
 
     with db.engine.connect() as conn:
         result = conn.execute(stmt, [{"name": f"%{name}%",
+                                      "breed": f"%{breed}%",
+                                      "client_email": f"%{client_email}%",
                                       "offset": offset,
                                       "limit": limit}])
         json = []
@@ -141,7 +166,10 @@ def get_dogs(
             json.append(
                 {
                     "dog_id": row.dog_id,
-                    "name": row.dog_name 
+                    "name": row.dog_name,
+                    "birthday": row.birthday,
+                    "breed": row.breed,
+                    "client_email": row.client_email
                 }
             )
 

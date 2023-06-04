@@ -59,8 +59,7 @@ def add_trainer(trainer: TrainerJson):
             ]).scalar_one()
 
             return f"trainer_id added: {trainer_id}" 
-    #TODO: fix internal server error: 
-    #   EmailSyntaxError("The email address is not valid. It must have exactly one @-sign.")
+        
     except EmailNotValidError as e:
         print(str(e))
         raise HTTPException(status_code=400, 
@@ -106,8 +105,8 @@ def verify_password(trainer: TrainerCheck):
             return result.trainer_id
 
 
-@router.get("/trainers/{trainer_id}", tags=["trainers"])
-def get_trainer(trainer_id: int):
+@router.get("/trainers/{id}", tags=["trainers"])
+def get_trainer(id: int):
     """
     This endpoint can return and update a trainer by its identifiers. 
     For each trainer, it returns:
@@ -123,7 +122,7 @@ def get_trainer(trainer_id: int):
         """)
 
     with db.engine.connect() as conn:
-        result = conn.execute(stmt, [{"id": trainer_id}])
+        result = conn.execute(stmt, [{"id": id}])
         json = []
         for row in result:
             json.append(
@@ -143,6 +142,7 @@ def get_trainer(trainer_id: int):
 @router.get("/trainers/", tags=["trainers"])
 def get_trainers(
     email: str = "",
+    name: str = "",
     limit: int = Query(50, ge=1, le=250),
     offset: int = Query(0, ge=0)
 ):
@@ -154,13 +154,13 @@ def get_trainers(
     - `email`: the trainer's email
 
     You can set a limit and offset.
-    You can filter by trainer email. 
+    You can filter by trainer email and/or name. 
     """
 
     stmt = sqlalchemy.text("""                            
         SELECT trainer_id, first_name, last_name, email
         FROM trainers  
-        WHERE email ILIKE :email
+        WHERE email ILIKE :email AND first_name ILIKE :name 
         LIMIT :limit
         OFFSET :offset           
     """)
@@ -168,7 +168,8 @@ def get_trainers(
     with db.engine.connect() as conn:
         result = conn.execute(stmt, [{"offset": offset,
                                       "limit": limit, 
-                                      "email": f"%{email}%"}])
+                                      "email": f"%{email}%", 
+                                      "name": f"%{name}%"}])
         json = []
         for row in result:
             json.append(

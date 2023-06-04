@@ -21,14 +21,14 @@ fake = Faker()
 num_trainers = 20
 num_class_types = 5 #fixed
 num_rooms = 10 
-# num_dogs = 150000
-# num_attendances = 350000
-# num_classes = 150000
-# num_comments = 350000
-num_dogs = 50
-num_attendances = 70
-num_classes = 70
-num_comments = 100
+num_dogs = 150000
+num_attendances = 350000
+num_classes = 150000
+num_comments = 350000
+# num_dogs = 50
+# num_attendances = 70
+# num_classes = 70
+# num_comments = 100
 
 
 def populate_trainers():
