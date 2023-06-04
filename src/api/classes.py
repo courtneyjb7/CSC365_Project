@@ -72,13 +72,14 @@ class ClassJson(BaseModel):
     trainer_id: int
     date: str = "yyyy-mm-dd"
     start_time: str = "hh:mm AM/PM"
-    end_time: str = "hh:mm"
+    end_time: str = "hh:mm AM/PM"
     class_type_id: int
     room_id: int
     
 
 @router.post("/classes/", tags=["classes"])
 def add_classes(new_class: ClassJson):
+    
     """
     This endpoint adds a new class to a trainer's schedule.
     - `trainer_id`: id of the trainer teaching the class
@@ -107,7 +108,10 @@ def add_classes(new_class: ClassJson):
             class_date = datetime.datetime.strptime(new_class.date, "%Y-%m-%d").date()
             start_time = datetime.datetime.strptime(new_class.start_time, "%I:%M %p").time()
             end_time = datetime.datetime.strptime(new_class.end_time, "%I:%M %p").time()
-
+            
+            if end_time < start_time:                                
+                raise HTTPException(status_code=404, detail="end_time should be after start_time")
+                
             # check that room is available at given date/time
             rooms.find_room(class_date, start_time, end_time, conn, new_class.room_id)
 
@@ -155,7 +159,7 @@ def delete_class(class_id: int):
                                         where class_id = :id"""), 
                                         [{"id": class_id}])
 
-        return "success"
+        return f"class_id deleted: {class_id}"
     
     except Exception as error:
         if error.args != ():
@@ -315,14 +319,16 @@ def find_classes(class_type_id: int = 1,
                  day6: DayOptions = None,
                  day7: DayOptions = None,
                  limit: int = Query(50, ge=1, le=250)
-):                 
+):    
+    # has complex transaction             
     """
     This endpoint finds classes that meet the given criteria.
     It accepts a time range and any days of the week dog is available, 
-    and the class type the dog needs.
+    and the class type the dog needs. The classes returned also take place
+    after the current date.
     For every class, it returns:
     - `class_id`: the id associated with the class
-    - `trainer_id: the id of the trainer
+    - `trainer_id`: the id of the trainer
     - `type`: the type of class
     - `date`: the date the class takes place on
     - `start_time`: the time the class starts

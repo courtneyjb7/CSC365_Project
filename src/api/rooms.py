@@ -6,16 +6,6 @@ import datetime
 router = APIRouter()
 
 
-def verify_date_types(month, day, year, 
-        start_hour, start_minutes, end_hour, end_minutes):
-    class_date = datetime.date(year, month, day)
-    
-    start_time = datetime.time(start_hour, start_minutes)
-    
-    end_time = datetime.time(end_hour, end_minutes)
-
-    return class_date, start_time, end_time
-# eventually remove endpoint and use this function in post classes?
 @router.get("/rooms/", tags=["rooms"])
 def get_room(
         class_type_id: int,
@@ -23,6 +13,7 @@ def get_room(
         start_time: str = "hh:mm AM",
         end_time: str = "hh:mm AM"        
     ):
+    
     """
     This endpoint returns a room_id of a room in the facility that best meets the
     criteria of a potential class to take place there. 
@@ -101,7 +92,7 @@ def get_room(
                     }
                     return room
                 else: 
-                    # if no room that hold class max size, select largest room
+                    # if no room that holds class max size, select largest room
                     room = {
                         "room_id": available_rooms[-1][0],
                         "room_name": available_rooms[-1][2],
@@ -133,7 +124,7 @@ capacity < given class max size. The largest room available is {room}""")
 
 
 def find_room(class_date, start_time, end_time, conn, room_id):
-        
+    # has complex transaction
     available_rooms = conn.execute(sqlalchemy.text("""
         SELECT room_id
         FROM rooms

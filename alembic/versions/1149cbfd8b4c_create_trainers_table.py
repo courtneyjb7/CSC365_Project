@@ -22,7 +22,7 @@ def upgrade() -> None:
         sa.Column('trainer_id', sa.Integer(), primary_key=True),
         sa.Column('first_name', sa.Text, nullable=False),
         sa.Column('last_name', sa.Text, nullable=False),
-        sa.Column('email', sa.Text, nullable=False)
+        sa.Column('email', sa.Text, nullable=False, unique=True)
     )
 
 

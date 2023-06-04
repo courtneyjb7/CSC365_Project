@@ -31,10 +31,12 @@ def add_trainer(trainer: TrainerJson):
     # if not re.search("^[\w\.]+@([\w-]+\.)+[\w-]{2,4}$", trainer.email):
     #     raise HTTPException(status_code=400, 
     #                         detail="invalid email")
-    emailinfo = validate_email(trainer.email, check_deliverability=False)
-    email = emailinfo.normalized
+    
 
     try:
+        emailinfo = validate_email(trainer.email, check_deliverability=False)
+        email = emailinfo.normalized
+
         with db.engine.begin() as conn:
             stm = sqlalchemy.text("""
                 INSERT INTO trainers 
@@ -60,10 +62,11 @@ def add_trainer(trainer: TrainerJson):
     #TODO: fix internal server error: 
     #   EmailSyntaxError("The email address is not valid. It must have exactly one @-sign.")
     except EmailNotValidError as e:
+        print(str(e))
         raise HTTPException(status_code=400, 
-                            detail=f"{e}")
+                            detail=str(e))
+
     except Exception as error:
-        print("hello")
         if error.args != ():
             details = (error.args)[0]
             if "DETAIL:  " in details:
