@@ -21,10 +21,15 @@ fake = Faker()
 num_trainers = 20
 num_class_types = 5 #fixed
 num_rooms = 10 
-num_dogs = 150000
-num_attendances = 350000
-num_classes = 150000
-num_comments = 350000
+
+num_dogs = 400000
+num_attendances = 800000
+num_classes = 400000
+num_comments = 800000
+# num_dogs = 150000
+# num_attendances = 350000
+# num_classes = 150000
+# num_comments = 350000
 # num_dogs = 50
 # num_attendances = 70
 # num_classes = 70
@@ -227,12 +232,19 @@ def populate_comments():
     with engine.begin() as conn:    
         try:
             comments = []
-            text_options = ["Much improvement.",
-                            "Learned many basic commands today!" ,
+            text_options = ["Much improvement",
+                            "Learned many basic skills today!" ,
                             "Very well behaved dog!",
-                            "Ready to move into a more advanced class.",
-                            "Still working on patience.",
-                            "Needs potty training."]
+                            "Ready to move into a more advanced class",
+                            "Still working on patience",
+                            "Needs more training",
+                            "Should attend the puppy class",
+                            "Should move to the beginner class",
+                            "Very energetic dog",
+                            "Super calm dog",
+                            "Belongs in the intermediate class",
+                            "Will be ready to advance after next week",
+                            "Work on the new skills learned today"]
             for _ in range(num_comments): 
                 comments.append({
                     "dog_id": random.randint(1, num_dogs),

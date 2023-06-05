@@ -165,7 +165,7 @@ def get_classes(class_type_id: int = None,
                 to_char(date, 'Day') ILIKE :day5 OR
                 to_char(date, 'Day') ILIKE :day6 OR
                 to_char(date, 'Day') ILIKE :day7 OR
-                :day1 = '%None%'
+                :day1 = 'None%'
                 ) AND
                 (:range_start IS NULL OR
                     (CAST(:range_start AS TIME) <= classes.start_time 
@@ -183,13 +183,13 @@ def get_classes(class_type_id: int = None,
         """), [{
                 "type_id": class_type_id,
                 "date": date,
-                "day1": f"%{day1}%",
-                "day2": f"%{day2}%",
-                "day3": f"%{day3}%",
-                "day4": f"%{day4}%",
-                "day5": f"%{day5}%",
-                "day6": f"%{day6}%",
-                "day7": f"%{day7}%",
+                "day1": f"{day1}%",
+                "day2": f"{day2}%",
+                "day3": f"{day3}%",
+                "day4": f"{day4}%",
+                "day5": f"{day5}%",
+                "day6": f"{day6}%",
+                "day7": f"{day7}%",
                 "limit": limit,
                 "range_start": time_range[0],
                 "range_end": time_range[1],

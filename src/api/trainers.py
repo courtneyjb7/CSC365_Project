@@ -27,12 +27,6 @@ def add_trainer(trainer: TrainerJson):
         raise HTTPException(status_code=400, 
                             detail="password must be 6 or more characters.")
     
-
-    # if not re.search("^[\w\.]+@([\w-]+\.)+[\w-]{2,4}$", trainer.email):
-    #     raise HTTPException(status_code=400, 
-    #                         detail="invalid email")
-    
-
     try:
         emailinfo = validate_email(trainer.email, check_deliverability=False)
         email = emailinfo.normalized

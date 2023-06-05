@@ -156,9 +156,9 @@ def get_dogs(
     """)
 
     with db.engine.connect() as conn:
-        result = conn.execute(stmt, [{"name": f"%{name}%",
-                                      "breed": f"%{breed}%",
-                                      "client_email": f"%{client_email}%",
+        result = conn.execute(stmt, [{"name": f"{name}%",
+                                      "breed": f"{breed}%",
+                                      "client_email": f"{client_email}%",
                                       "offset": offset,
                                       "limit": limit}])
         json = []
@@ -176,8 +176,8 @@ def get_dogs(
     return json
 
 
-@router.delete("/dogs/comments/{comment_id}", tags=["dogs"])
-def delete_comments(comment_id: int):
+@router.delete("/dogs/comments/{id}", tags=["dogs"])
+def delete_comments(id: int):
     """
     This endpoint deletes a comment for a dog based on its comment ID.
     """
@@ -187,7 +187,7 @@ def delete_comments(comment_id: int):
                                             FROM comments 
                                             where comment_id = :id
                                         """), 
-                                        [{"id": comment_id}]).one_or_none()
+                                        [{"id": id}]).one_or_none()
             if result is None:
                 raise HTTPException(status_code=404, 
                         detail=("comment_id does not exist in comments table."))
@@ -195,9 +195,9 @@ def delete_comments(comment_id: int):
             conn.execute(sqlalchemy.text("""DELETE 
                                         FROM comments 
                                         where comment_id = :id"""), 
-                                        [{"id": comment_id}])
+                                        [{"id": id}])
 
-        return f"comment_id deleted: {comment_id}"
+        return f"comment_id deleted: {id}"
     
     except Exception as error:
         if error.args != ():
