@@ -26,15 +26,6 @@ num_dogs = 400000
 num_attendances = 800000
 num_classes = 400000
 num_comments = 800000
-# num_dogs = 150000
-# num_attendances = 350000
-# num_classes = 150000
-# num_comments = 350000
-# num_dogs = 50
-# num_attendances = 70
-# num_classes = 70
-# num_comments = 100
-
 
 def populate_trainers():
     
