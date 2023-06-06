@@ -2,15 +2,13 @@ import os
 import dotenv
 import sqlalchemy
 
-
-# DO NOT CHANGE THIS TO BE HARDCODED. ONLY PULL FROM ENVIRONMENT VARIABLES.
 dotenv.load_dotenv()
 
-def try_parse(type, val):
-    try:
-        return type(val)
-    except ValueError:
-        raise Exception("Incorrect type")
+# def try_parse(type, val):
+#     try:
+#         return type(val)
+#     except ValueError:
+#         raise Exception("Incorrect type")
 
 ## Postgres
 def database_connection_url():
@@ -32,4 +30,3 @@ comments = sqlalchemy.Table("comments", metadata_obj, autoload_with=engine)
 classes = sqlalchemy.Table("classes", metadata_obj, autoload_with=engine)
 class_types = sqlalchemy.Table("class_types", metadata_obj, autoload_with=engine)
 attendance = sqlalchemy.Table("attendance", metadata_obj, autoload_with=engine)
-

@@ -19,10 +19,10 @@ depends_on = None
 def upgrade() -> None:
     op.create_table(
         'trainers',
-        sa.Column('trainer_id', sa.Integer, primary_key=True),
-        sa.Column('first_name', sa.String(50), nullable=False),
-        sa.Column('last_name', sa.String(50), nullable=False),
-        sa.Column('email', sa.String(50), nullable=False)
+        sa.Column('trainer_id', sa.Integer(), primary_key=True),
+        sa.Column('first_name', sa.Text, nullable=False),
+        sa.Column('last_name', sa.Text, nullable=False),
+        sa.Column('email', sa.Text, nullable=False, unique=True)
     )
 
 

@@ -20,7 +20,7 @@ def upgrade() -> None:
     op.create_table(
         'rooms',
         sa.Column('room_id', sa.Integer, primary_key=True),
-        sa.Column('room_name', sa.String(50)),
+        sa.Column('room_name', sa.Text),
         sa.Column('max_dog_capacity', sa.Integer, nullable=False)
     )
 

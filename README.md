@@ -13,3 +13,8 @@ For our project, we will create a database that contains information for a Dog T
 Vercel Links:
 - Staging: https://dog-trainer-staging.vercel.app/
 - Production: https://dog-trainer-api.vercel.app/
+
+To rebuild alembic and populate with fake data, run:
+```
+sh populate_alembic.sh
+```

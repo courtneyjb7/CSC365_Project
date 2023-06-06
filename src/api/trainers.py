@@ -3,6 +3,7 @@ from src import database as db
 import sqlalchemy
 from fastapi.params import Query
 from pydantic import BaseModel
+from email_validator import validate_email, EmailNotValidError
 
 router = APIRouter()
 
@@ -24,7 +25,11 @@ def add_trainer(trainer: TrainerJson):
     if len(trainer.password) < 6:
         raise HTTPException(status_code=400, 
                             detail="password must be 6 or more characters.")
+    
     try:
+        emailinfo = validate_email(trainer.email, check_deliverability=False)
+        email = emailinfo.normalized
+
         with db.engine.begin() as conn:
             stm = sqlalchemy.text("""
                 INSERT INTO trainers 
@@ -35,17 +40,24 @@ def add_trainer(trainer: TrainerJson):
                     :email,
                     crypt(:pwd, gen_salt('bf'))
                 )
+                RETURNING trainer_id
             """)
-            conn.execute(stm, [
+            trainer_id = conn.execute(stm, [
                 {
                     "first": trainer.first_name,
                     "last": trainer.last_name,
-                    "email": trainer.email,
+                    "email": email,
                     "pwd": trainer.password
                 }
-            ])
+            ]).scalar_one()
 
-            return "success"
+            return f"trainer_id added: {trainer_id}" 
+        
+    except EmailNotValidError as e:
+        print(str(e))
+        raise HTTPException(status_code=400, 
+                            detail=str(e))
+
     except Exception as error:
         if error.args != ():
             details = (error.args)[0]
@@ -56,8 +68,12 @@ def add_trainer(trainer: TrainerJson):
             raise
 
 
-@router.get("/trainers/{trainer_email}/{pwd}", tags=["trainers"])
-def verify_password(trainer_email: str, pwd: str):
+class TrainerCheck(BaseModel):
+    trainer_email: str
+    pwd: str
+
+@router.post("/trainers/login/", tags=["trainers"])
+def verify_password(trainer: TrainerCheck):
     """
     This endpoint verifies the login credentials for a trainer. Returns trainer id
     - `trainer_email`: the email associated with the trainer
@@ -67,13 +83,13 @@ def verify_password(trainer_email: str, pwd: str):
     check_valid = sqlalchemy.text(
                     """SELECT trainer_id 
                         FROM trainers
-                        WHERE email = :email 
+                        WHERE email ILIKE :email 
                         AND password = crypt(:pwd, password)""")
     
     with db.engine.begin() as conn:
         result = conn.execute(check_valid, [
-            {"email": trainer_email,
-             "pwd": pwd}
+            {"email": trainer.trainer_email,
+             "pwd": trainer.pwd}
              ]).one_or_none()
         
         if result is None:
@@ -82,8 +98,8 @@ def verify_password(trainer_email: str, pwd: str):
             return result.trainer_id
 
 
-@router.get("/trainers/{trainer_id}", tags=["trainers"])
-def get_trainer(trainer_id: int):
+@router.get("/trainers/{id}", tags=["trainers"])
+def get_trainer(id: int):
     """
     This endpoint can return and update a trainer by its identifiers. 
     For each trainer, it returns:
@@ -99,7 +115,7 @@ def get_trainer(trainer_id: int):
         """)
 
     with db.engine.connect() as conn:
-        result = conn.execute(stmt, [{"id": trainer_id}])
+        result = conn.execute(stmt, [{"id": id}])
         json = []
         for row in result:
             json.append(
@@ -119,6 +135,7 @@ def get_trainer(trainer_id: int):
 @router.get("/trainers/", tags=["trainers"])
 def get_trainers(
     email: str = "",
+    name: str = "",
     limit: int = Query(50, ge=1, le=250),
     offset: int = Query(0, ge=0)
 ):
@@ -127,15 +144,16 @@ def get_trainers(
     For every trainer, it returns:
     - `trainer_id`: the id associated with the trainer
     - `name`: full name of the trainer
+    - `email`: the trainer's email
 
     You can set a limit and offset.
-    You can filter by trainer email. 
+    You can filter by trainer email and/or name. 
     """
 
     stmt = sqlalchemy.text("""                            
-        SELECT trainer_id, first_name, last_name
+        SELECT trainer_id, first_name, last_name, email
         FROM trainers  
-        WHERE email ILIKE :email
+        WHERE email ILIKE :email AND first_name ILIKE :name 
         LIMIT :limit
         OFFSET :offset           
     """)
@@ -143,13 +161,15 @@ def get_trainers(
     with db.engine.connect() as conn:
         result = conn.execute(stmt, [{"offset": offset,
                                       "limit": limit, 
-                                      "email": f"%{email}%"}])
+                                      "email": f"%{email}%", 
+                                      "name": f"%{name}%"}])
         json = []
         for row in result:
             json.append(
                 {
                     "trainer_id": row.trainer_id,
-                    "name": row.first_name + " " + row.last_name 
+                    "name": row.first_name + " " + row.last_name ,
+                    "email": row.email
                 }
             )
 
