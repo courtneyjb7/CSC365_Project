@@ -1,5 +1,4 @@
 from faker import Faker
-# import database as db
 import sqlalchemy
 import random
 import os
