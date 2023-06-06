@@ -1,4 +1,4 @@
-# CSC365_Project
+# dog_trainer_api
 
 Veronica Guzman (vguzma08@calpoly.edu)
 
