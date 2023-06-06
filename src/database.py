@@ -4,11 +4,11 @@ import sqlalchemy
 
 dotenv.load_dotenv()
 
-def try_parse(type, val):
-    try:
-        return type(val)
-    except ValueError:
-        raise Exception("Incorrect type")
+# def try_parse(type, val):
+#     try:
+#         return type(val)
+#     except ValueError:
+#         raise Exception("Incorrect type")
 
 ## Postgres
 def database_connection_url():

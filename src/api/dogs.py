@@ -111,7 +111,7 @@ def add_comments(id: int, new_comment: CommentJson):
 
             comment_id = conn.execute(stmt, [{
                 "dog_id": id,
-                "trainer_id": db.try_parse(int, new_comment.trainer_id), 
+                "trainer_id": new_comment.trainer_id, 
                 "text": new_comment.comment_text
             }]).scalar_one()
 
