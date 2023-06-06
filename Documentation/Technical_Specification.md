@@ -35,11 +35,12 @@ This endpoint returns all the trainers in the database.
 For every trainer, it returns:
     - `trainer_id`: the id associated with the trainer
     - `name`: full name of the trainer
+    - `email`: the trainer's email
 
 You can set a limit and offset.
-You can filter by trainer email.
+You can filter by trainer email and/or name.
 ```
-GET /trainers/{trainer_id}
+GET /trainers/{id}
 ```
 This endpoint can return and update a trainer by its identifiers. 
 For each trainer, it returns:
@@ -48,113 +49,157 @@ For each trainer, it returns:
     - `last`: last name of the trainer
     - `email`: the company email of the trainer
 ```
-POST /classes/{trainer_id}
+POST /trainers/login/
 ```
-This endpoint adds a new class to a trainer's schedule.
-    `date`: the day the class takes place, given by the following three values:
-        • "month": int representing month number of date
-        • "day": int representing day number of date
-        • "year": int representing year number of date
-    `start_time`: the time the class starts, given by the following values:
-        • "start_hour": int representing the hour of start_time
-        • "start_minutes": int representing the minutes of start_time
-    `end_time`: the time the class ends, given by the following values:
-        • "end_hour": int representing the hour of end_time
-        • "end_minutes": int representing the minutes of end_time
-    `class_type_id`:the id of the type of class
+This endpoint verifies the login credentials for a trainer. Returns trainer id
+    - `trainer_email`: the email associated with the trainer
+    - `pwd`: trainer's password
+```
+POST /trainers/
+```
+This endpoint adds a new trainer to the database. 
+    - `first_name`: first name of the trainer
+    - `last_name`: last name of the trainer
+    - `email`: the company email of the trainer
+    - `password`: the trainer's password. Password should be 6 characters or more.
 ```
 GET /classes/
 ```
-This endpoint returns all the training classes in the database. 
+This endpoint finds classes that meet the given criteria. 
+You can filter by trainer_id, class_type_id, a time range, and
+days of the week. If a date is specified, only classes that 
+occur on or after the date will be returned. 
+It accepts a limit and is sorted by date in ascending order. 
+
 For every class, it returns:
-    `class_id`: the id associated with the class
-    `trainer_name`: name of the trainer
-    `type`: the type of class
-    `date`: the date the class take places
-    `num_of_dogs_attended`: the number of dogs attending the class
-
-    You can filter by type with the `type` query parameter.
-
-    The `limit` and `offset` query parameters are used for pagination. 
-        The `limit` query parameter specifies the maximum number 
-        of results to return. 
-        The `offset` query parameter specifies the
-        number of results to skip before returning results.
-
-    Classes are sorted by date in descending order.
+    - `class_id`: the id associated with the class
+    - `trainer_id`: the id of the trainer
+    - `trainer_name`: first and last name of the trainer
+    - `type`: the type of class
+    - `date`: the date the class takes place on
+    - `start_time`: the time the class starts
+    - `end_time`: the time the class ends
+    - `room_id`: the id of the room the class takes place in
+    - `num_of_dogs_attended`: the number of dogs attending the class
 ```
-GET /classes/{class_id}
+GET /classes/{id}
 ```
 This endpoint returns a specific class in the database. For every class, it returns:
-    `class_id`: the id associated with the trainer
-    `type`: the type of the class
-    `description`: description of the class
-    `trainer_first_name`: the first name of the trainer teaching the class
-    `trainer_last_name`: the first name of the trainer teaching the class
-    `date`: the day the class takes place
-    `start_time`: the time the class starts
-    `end_time`: the time the class ends
-    `dogs_attended`: a dictionary of a dog's id, name, and checkin time for the dogs that attended
+    - `class_id`: the id associated with the class
+    - `type`: the type of the class
+    - `description`: description of the class
+    - `trainer_id`: the id of the trainer teaching the class
+    - `trainer_first_name`: the first name of the trainer 
+    - `trainer_last_name`: the first name of the trainer 
+    - `date`: the day the class takes place
+    - `start_time`: the time the class starts
+    - `end_time`: the time the class ends
+    - `room_id`: the id of the room the class takes place in
+    - `room_name`: the name of the room the class takes place in
+    - `dogs_attended`: a dictionary of a dog's id, name, and checkin time
+                        for the dogs that attended
 ```
-DELETE /classes/{class id}
+POST /classes/
 ```
-This endpoint deletes a class based on its class ID.
+This endpoint adds a new class to a trainer's schedule.
+    - `trainer_id`: id of the trainer teaching the class
+    - `date`: the day the class takes place, given by:
+        • "yyyy-mm-dd": provide a string with the year, month, and day seperated by hyphen (-)
+    - `start_time`: the time the class starts, given by:
+        • "hh:mm AM/PM": provide a string with the hour and minutes seperated with a colon, as well as an indication whether time is AM or PM
+    - `end_time`: the time the class ends, given by the following values:
+        • "hh:mm AM/PM": provide a string with the hour and minutes seperated with a colon, as well as an indication whether time is AM or PM
+    - `class_type_id`:the id of the type of class
+    - `room_id`: the id of the room the trainer wants to teach the class in
 ```
-PUT /classes/{class_id}/{dog_id}/attendance
+POST /classes/{id}/attendance
 ```
 This endpoint adds a dog's attendance to a specific class.
-    `attendance_id`: the id of the attendance record
-    `dog_id`: the id of the dog attending
-    `class_id`: the id of the class the dog is attending
-    `check_in`: the timestamp the dog checked in
-        • "month": int representing month number of date
-        • "day": int representing day number of date
-        • "year": int representing year number of date
-        • "hour": int representing the hour dog was checked in
-        • "minutes": int representing the minutes dog was checked in
+    - `attendance_id`: the id of the attendance record
+    - `dog_id`: the id of the dog attending
+    - `id`: the id of the class the dog is attending
+```
+DELETE /classes/{id}
+```
+This endpoint deletes a class based on its class ID.
 ```
 GET /dogs/
 ```
 This endpoint returns all the dogs in the database. 
 For every dog, it returns:
-    `dog_id`: the id associated with the dog
-    `dog_name`: the name of the dog
+    - `dog_id`: the id associated with the dog
+    - `dog_name`: the name of the dog
+    - `birthday`: the birthday of the dog
+    - `breed`: the dog's breed
+    - `client_email`: the email of the owner of the dog
 ```
-GET /dogs/{dog_id}
+GET /dogs/{id}
 ```
 This endpoint returns information about a dog in the database. 
 For every dog, it returns:
-    `dog_id`: the id associated with the dog
-    `name`: the name of the dog
-    `client_email`: the email of the owner of the dog
-    `birthday`: the dog's date of birth
-    `breed`: the dog's breed
-    `trainer_comments`: a list of comments from the 
-        trainer about the dog's progress
+    - `id`: the id associated with the dog
+    - `name`: the name of the dog
+    - `client_email`: the email of the owner of the dog
+    - `birthday`: the dog's date of birth
+    - `breed`: the dog's breed
+    - `trainer_comments`: a list of comments from the 
+            trainer about the dog's progress 
 
-        Each comment returns:
-            `comment_id`: the id of the comment
-            `trainer`: the name of the trainer who wrote the comment
-            `time_added`: the day and time the comment was made
-            `text`: the comment text
+Each comment returns:
+    - `comment_id`: the id of the comment
+    - `trainer`: the name of the trainer who wrote the comment
+    - `time_added`: the day and time the comment was made
+    - `text`: the comment text
 ```
 POST /dogs/{dog_id}/comments
 ```
 This endpoint updates trainer comments for a dog. 
-    `comment_id`: the id of the comment
-    `dog_id`: the id of the dog the comment is about
-    `trainer_id`: the id of the trainer who made the comment
-    `comment_text`: a string from the trainer about the dog's progress
-    `time_added`: the time and date the comment was made
+    - `id`: the id of the dog the comment is about
+
+Provide a body json with the following information:
+    - `trainer_id`: the id of the trainer who made the comment
+    - `comment_text`: a string from the trainer about the dog's progress
+```
+DELETE /dogs/comments/{id}
+```
+This endpoint deletes a comment for a dog based on its comment ID.
 ```
 GET /class-types/
 ```
 This endpoint returns all of the types of training classes in the database. 
 For every type, it returns:
-    `type_id`: the id associated with the class type
-    `type`: the type of class
-    `description`: a description of the class
-    `max_num_dogs`: number of dogs that can be in class type
+    - `type_id`: the id associated with the class type
+    - `type`: the type of class
+    - `description`: a description of the class
+    - `max_num_dogs`: number of dogs that can be in class type
+    
+You can filter by type with the `type` query parameter. 
+For example, "Puppy" or "Beginner".
+```
+GET /rooms/
+```
+This endpoint returns a room_id of a room in the facility that best meets the
+criteria of a potential class to take place there. 
+It returns the smallest room that is available at the given time and
+has a max dog capacity greater than the given class type's
+max number of dogs. If the only available rooms are smaller than the class type max,
+it throws an error but says what the largest room available is.
+
+Given:
+    - `class type`: class you are interested in signing up a dog for
+    - `date`: the day the class takes place, given by:
+        - "yyyy-mm-dd": provide a string with the year, month, and day seperated by hyphen (-)
+    - `start_time`: the time the class starts, given by:
+        - "hh:mm AM/PM": provide a string with the hour and minutes seperated with a colon, 
+        as well as an indication whether time is AM or PM
+    - `end_time`: the time the class ends, given by:
+        - "hh:mm AM/PM": provide a string with the hour and minutes seperated with a colon, 
+        as well as an indication whether time is AM or PM
+    it returns:
+    - `room_id`: the id of the room in the facility that meets the class's needs
+    - `room_name`: the name of the room
+    - `max_dog_capacity`: the maximum number of dogs that can fit in the room
+    - `max_class_size`: the max number of dogs that can attend a class of the given class type
 ```
 ## Edge cases and transaction flows
 

@@ -23,7 +23,7 @@ def upgrade() -> None:
         sa.Column('dog_id', sa.Integer, sa.ForeignKey('dogs.dog_id'), nullable=False),
         sa.Column('trainer_id', sa.Integer, 
                   sa.ForeignKey('trainers.trainer_id'), nullable=False),
-        sa.Column('comment_text', sa.Unicode(500), nullable=False),
+        sa.Column('comment_text', sa.Text, nullable=False),
         sa.Column('time_added', sa.TIMESTAMP, 
                   server_default=sa.text('NOW()'), nullable=False)        
     )
