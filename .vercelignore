@@ -4,9 +4,3 @@ test
 .ruff_cache
 .vscode
 .git
-alembic
-alembic.ini
-populate_alembic.sh
-supabase
-Documentation
-DB_URL_local.txt
