@@ -84,7 +84,6 @@ def get_dog(id: int):
 
 class CommentJson(BaseModel):
     trainer_id: int
-    class_id: int
     comment_text: str
 
 

@@ -309,7 +309,7 @@ def add_attendance(id: int, dog_id: int):
             stm = sqlalchemy.text("""
                 SELECT attendance_id
                 FROM attendance
-                WHERE dog_id = :dog_id AND class_id = :class_id               
+                WHERE dog_id = :dog_id AND class_id = :class_id           
             """)
             result = conn.execute(stm, [
                 {
@@ -320,10 +320,33 @@ def add_attendance(id: int, dog_id: int):
             if result is not None:
                 raise HTTPException(status_code=404, 
                                     detail="dog already checked into this class.")
+            
+            cap_check_stmt = sqlalchemy.text("""
+                SELECT COUNT(attendance_id) AS num_attending
+                FROM attendance
+                RIGHT JOIN classes ON attendance.class_id = classes.class_id
+                RIGHT JOIN rooms ON classes.room_id = rooms.room_id
+                RIGHT JOIN class_types ON classes.class_type_id = class_types.class_type_id
+                WHERE classes.class_id = :class_id
+                GROUP BY classes.class_id,  rooms.max_dog_capacity, class_types.max_num_dogs
+                HAVING COUNT(attendance_id)  < rooms.max_dog_capacity AND
+                    COUNT(attendance_id) < class_types.max_num_dogs      
+            """)
+            result = conn.execute(cap_check_stmt, [
+                {
+                    "class_id": id
+                }
+            ]).fetchall()
+            
+            if result == []:
+                raise HTTPException(status_code=404, 
+                                    detail="class is full")
+
             stm = sqlalchemy.text("""
                 INSERT INTO attendance 
                 (dog_id, class_id)
-                VALUES (:dog_id, :class_id) RETURNING attendance_id               
+                VALUES (:dog_id, :class_id) 
+                RETURNING attendance_id               
             """)
 
             attendance_id = conn.execute(stm, [
@@ -331,7 +354,7 @@ def add_attendance(id: int, dog_id: int):
                     "dog_id": dog_id,
                     "class_id": id,
                 }
-            ])
+            ]).scalar_one()
 
             return f"attendance_id added: {attendance_id}" 
 

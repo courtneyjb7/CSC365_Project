@@ -137,10 +137,10 @@ def find_room(class_date, start_time, end_time, conn, room_id):
             FROM classes
             JOIN rooms ON classes.room_id = rooms.room_id
             WHERE classes.date = :date AND 
-                ((CAST(:start_time AS TIME) < classes.start_time 
+                ((CAST(:start_time AS TIME) <= classes.start_time 
                     AND CAST(:end_time AS TIME) > classes.start_time)
                 OR (CAST(:start_time AS TIME) < classes.end_time 
-                    AND CAST(:end_time AS TIME) > classes.end_time)
+                    AND CAST(:end_time AS TIME) >= classes.end_time)
                 OR (CAST(:start_time AS TIME) = classes.start_time 
                     AND CAST(:end_time AS TIME) = classes.end_time))
         )
