@@ -239,18 +239,23 @@ def add_classes(new_class: ClassJson):
     This endpoint adds a new class to a trainer's schedule.
     - `trainer_id`: id of the trainer teaching the class
     - `date`: the day the class takes place, given by:
-        - "yyyy-mm-dd": provide a string with the year, month, and day seperated by hyphen (-)
+        - "yyyy-mm-dd": provide a string with the year, 
+        month, and day seperated by hyphen (-)
     - `start_time`: the time the class starts, given by:
-        - "hh:mm AM/PM": provide a string with the hour and minutes seperated with a colon, as well as an indication whether time is AM or PM
+        - "hh:mm AM/PM": provide a string with the hour and minutes seperated 
+        with a colon, as well as an indication whether time is AM or PM
     - `end_time`: the time the class ends, given by the following values:
-        - "hh:mm AM/PM": provide a string with the hour and minutes seperated with a colon, as well as an indication whether time is AM or PM
+        - "hh:mm AM/PM": provide a string with the hour and minutes 
+        seperated with a colon, as well as an indication whether time is AM or PM
     - `class_type_id`:the id of the type of class
     - `room_id`: the id of the room the trainer wants to teach the class in
     """
 
     try:
 
-        with db.engine.connect().execution_options(isolation_level="SERIALIZABLE") as conn:
+        with db.engine.connect().execution_options(
+            isolation_level="SERIALIZABLE"
+        ) as conn:
             with conn.begin():
 
                 stm = sqlalchemy.text("""
@@ -261,15 +266,20 @@ def add_classes(new_class: ClassJson):
                 """)
 
                 # convert from string format to datetime format
-                class_date = datetime.datetime.strptime(new_class.date, "%Y-%m-%d").date()
-                start_time = datetime.datetime.strptime(new_class.start_time, "%I:%M %p").time()
-                end_time = datetime.datetime.strptime(new_class.end_time, "%I:%M %p").time()
+                class_date = datetime.datetime.strptime(new_class.date, 
+                                                        "%Y-%m-%d").date()
+                start_time = datetime.datetime.strptime(new_class.start_time, 
+                                                        "%I:%M %p").time()
+                end_time = datetime.datetime.strptime(new_class.end_time, 
+                                                      "%I:%M %p").time()
                 
                 if end_time < start_time:                                
-                    raise HTTPException(status_code=404, detail="end_time should be after start_time")
+                    raise HTTPException(status_code=404, 
+                                        detail="end_time should be after start_time")
                     
                 # check that room is available at given date/time
-                rooms.find_room(class_date, start_time, end_time, conn, new_class.room_id)
+                rooms.find_room(class_date, start_time, 
+                                end_time, conn, new_class.room_id)
 
                 class_id = conn.execute(stm, [
                     { 
@@ -326,9 +336,11 @@ def add_attendance(id: int, dog_id: int):
                 FROM attendance
                 RIGHT JOIN classes ON attendance.class_id = classes.class_id
                 RIGHT JOIN rooms ON classes.room_id = rooms.room_id
-                RIGHT JOIN class_types ON classes.class_type_id = class_types.class_type_id
+                RIGHT JOIN class_types ON 
+                    classes.class_type_id = class_types.class_type_id
                 WHERE classes.class_id = :class_id
-                GROUP BY classes.class_id,  rooms.max_dog_capacity, class_types.max_num_dogs
+                GROUP BY classes.class_id,  rooms.max_dog_capacity, 
+                    class_types.max_num_dogs
                 HAVING COUNT(attendance_id)  < rooms.max_dog_capacity AND
                     COUNT(attendance_id) < class_types.max_num_dogs      
             """)
@@ -374,7 +386,9 @@ def delete_class(id: int):
     This endpoint deletes a class based on its class ID.
     """
     try:
-        with db.engine.connect().execution_options(isolation_level="SERIALIZABLE") as conn:
+        with db.engine.connect().execution_options(
+            isolation_level="SERIALIZABLE"
+        ) as conn:
             with conn.begin():
                 result = conn.execute(sqlalchemy.text("""SELECT class_id
                                                 FROM classes 

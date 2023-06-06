@@ -25,21 +25,26 @@ def get_room(
     Given:
     - `class type`: class you are interested in signing up a dog for
     - `date`: the day the class takes place, given by:
-        - "yyyy-mm-dd": provide a string with the year, month, and day seperated by hyphen (-)
+        - "yyyy-mm-dd": provide a string with the year, month, and day 
+            seperated by hyphen (-)
     - `start_time`: the time the class starts, given by:
-        - "hh:mm AM/PM": provide a string with the hour and minutes seperated with a colon, 
+        - "hh:mm AM/PM": provide a string with the hour and minutes 
+            seperated with a colon, 
         as well as an indication whether time is AM or PM
     - `end_time`: the time the class ends, given by:
-        - "hh:mm AM/PM": provide a string with the hour and minutes seperated with a colon, 
+        - "hh:mm AM/PM": provide a string with the hour 
+        and minutes seperated with a colon, 
         as well as an indication whether time is AM or PM
     it returns:
     - `room_id`: the id of the room in the facility that meets the class's needs
     - `room_name`: the name of the room
     - `max_dog_capacity`: the maximum number of dogs that can fit in the room
-    - `max_class_size`: the max number of dogs that can attend a class of the given class type
+    - `max_class_size`: the max number of dogs that can 
+        attend a class of the given class type
     """
     try:
-        with db.engine.connect().execution_options(isolation_level="SERIALIZABLE") as conn:
+        with db.engine.connect() \
+        .execution_options(isolation_level="SERIALIZABLE") as conn:
             with conn.begin():
             
                 date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
@@ -47,7 +52,8 @@ def get_room(
                 end_time = datetime.datetime.strptime(end_time, "%I:%M %p").time()
                 
                 if end_time < start_time:                                
-                    raise HTTPException(status_code=404, detail="end_time should be after start_time")
+                    raise HTTPException(status_code=404, 
+                                        detail="end_time should be after start_time")
                  
                 result = conn.execute(sqlalchemy.text("""
                     SELECT max_num_dogs

@@ -95,27 +95,32 @@ def populate_class_types():
             class_types = [
                 {
                     "type": "Puppy Training",
-                    "description": "Potty training, puppy biting, barking, and basic commands will be covered.",
+                    "description": "Potty training, puppy biting,\
+ barking, and basic commands will be covered.",
                     "max_num_dogs": 10
                 },
                 {
                     "type": "Beginner",
-                    "description": "Dogs at the beginner level will learn basic manners and obedience techniques.",
+                    "description": "Dogs at the beginner level \
+will learn basic manners and obedience techniques.",
                     "max_num_dogs": 10
                 },
                 {
                     "type": "Intermediate",
-                    "description": "Dogs at the intermediate level will enhance their skills from previous classes.",
+                    "description": "Dogs at the intermediate level \
+will enhance their skills from previous classes.",
                     "max_num_dogs": 15
                 },
                 {
                     "type": "Advanced",
-                    "description": "Dogs will learn more advanced skills and commands, including emotional support animal training.",
+                    "description": "Dogs will learn more advanced skills \
+and commands, including emotional support animal training.",
                     "max_num_dogs": 20
                 },
                 {
                     "type": "Dog Playdate",
-                    "description": "A large group of dogs will interact and play together.",
+                    "description": "A large group of dogs will \
+interact and play together.",
                     "max_num_dogs": 50
                 }
             ]
@@ -189,7 +194,8 @@ def populate_classes():
             classes = []
             for _ in range(num_classes):  
                 # start_time = fake.time_object()
-                s_time = datetime(2022, 1, 1, random.randint(0, 23), random.choice([0, 30]), 0)
+                s_time = datetime(2022, 1, 1, 
+                                  random.randint(0, 23), random.choice([0, 30]), 0)
                 time_change = timedelta(hours=random.randint(1, 3))
                 end_time = s_time + time_change
 
