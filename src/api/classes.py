@@ -158,15 +158,22 @@ def get_classes(class_type_id: int = None,
 
             WHERE (:date IS NULL OR classes.date >= CAST(:date AS DATE)) AND 
                 (classes.class_type_id = :type_id OR :type_id IS NULL) AND
-                (to_char(date, 'Day') ILIKE :day1 OR
-                to_char(date, 'Day') ILIKE :day2 OR
-                to_char(date, 'Day') ILIKE :day3 OR
-                to_char(date, 'Day') ILIKE :day4 OR
-                to_char(date, 'Day') ILIKE :day5 OR
-                to_char(date, 'Day') ILIKE :day6 OR
-                to_char(date, 'Day') ILIKE :day7 OR
-                :day1 = 'None%'
-                ) AND
+                ((to_char(date, 'Day') LIKE :day1 OR
+                to_char(date, 'Day') LIKE :day2 OR
+                to_char(date, 'Day') LIKE :day3 OR
+                to_char(date, 'Day') LIKE :day4 OR
+                to_char(date, 'Day') LIKE :day5 OR
+                to_char(date, 'Day') LIKE :day6 OR
+                to_char(date, 'Day') LIKE :day7                 
+                ) OR 
+                (:day1 LIKE 'None%' AND 
+                :day2 LIKE 'None%' AND
+                :day3 LIKE 'None%' AND
+                :day4 LIKE 'None%' AND
+                :day5 LIKE 'None%' AND
+                :day6 LIKE 'None%' AND
+                :day7 LIKE 'None%'  ) ) AND
+
                 (:range_start IS NULL OR
                     (CAST(:range_start AS TIME) <= classes.start_time 
                     AND CAST(:range_end AS TIME) >= classes.start_time)
