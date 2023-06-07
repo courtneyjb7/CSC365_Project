@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from src.api import trainers, classes, dogs, class_types, rooms
 
 description = """
-Dog Training and Boarding company
+Dog Training Company
 """
 tags_metadata = [
     {
