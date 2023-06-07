@@ -37,7 +37,7 @@ To organize our data, we developed an Entity Relationship Diagram that describes
 
 We identified the phenomenons that can occur from our top complex interactions of transactions in our database if we had no concurrency control and described our solution to ensure isolation of our transactions. Check out [Isolation Levels](Documentation/Isolation_Levels.pdf) to learn more.
 
-To view the indexes we created to make our SQL execution time faster, check out [Indexes](Documentation/Indexes_dog_trainer_api.pdf)
+To view the indexes we created to make our SQL execution time faster, check out [Indexes](Documentation/Indexes_dog_trainer_api.pdf).
 
 ## Run API on your local machine
 
