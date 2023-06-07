@@ -45,7 +45,7 @@ To view the indexes we created to make our SQL execution time faster, check out 
 All prerequisites are listed in [requirements.txt](requirements.txt)
 
 ### Set up your local environment
-Follow step listed [here](https://supabase.com/docs/guides/getting-started/local-development)
+Follow steps listed [here](https://supabase.com/docs/guides/getting-started/local-development) in the Supabase documentation.
 
 ### Environment Variables
 Create a .env file with these variables:
