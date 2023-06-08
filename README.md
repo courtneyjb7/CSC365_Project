@@ -1,5 +1,5 @@
 # Dog Trainer API
-
+![Dog Trainers Co.](dog-trainers.png)
 ## Authors
 Veronica Guzman (vguzma08@calpoly.edu)
 
