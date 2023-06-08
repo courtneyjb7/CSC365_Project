@@ -21,7 +21,7 @@ Courtney Barber (cbarbe03@calpoly.edu)
 </details>
 
 ## About
-This API simulates a dog training company's database for its trainers. The trainers can create an account and log in. They can access information about other trainers, classes taking place, class types, rooms in the facility, and dogs. Trainers can also create and schedule classes, check dogs into a class they are attending, and provide comments on the dog's progress. When scheduling a class, the trainers can check what rooms in the facility are available at the given time and date.  
+This API simulates a dog training company's database for the trainers that work there. The trainers can create an account and log in. They can access information about other trainers, classes taking place, class types, rooms in the facility, and dogs. Trainers can also create and schedule classes, check dogs into a class they are attending, and provide comments on the dog's progress. When scheduling a class, the trainers can check what rooms in the facility are available at the given time and date.  
 
 ## Vercel Links
 We set up our API endpoints to run on vercel. Below are links to our production and staging API endpoints:
