@@ -21,10 +21,15 @@ num_trainers = 20
 num_class_types = 5 #fixed
 num_rooms = 10 
 
-num_dogs = 400000
-num_attendances = 800000
-num_classes = 400000
-num_comments = 800000
+# num_dogs = 400000
+# num_attendances = 800000
+# num_classes = 400000
+# num_comments = 800000
+
+num_dogs = 100
+num_attendances = 200
+num_classes = 100
+num_comments = 200
 
 
 def populate_trainers():
@@ -195,13 +200,13 @@ def populate_classes():
             for _ in range(num_classes):  
                 # start_time = fake.time_object()
                 s_time = datetime(2022, 1, 1, 
-                                  random.randint(0, 23), random.choice([0, 30]), 0)
+                                  random.randint(8, 14), random.choice([0, 30]), 0)
                 time_change = timedelta(hours=random.randint(1, 3))
                 end_time = s_time + time_change
 
                 classes.append({
                     "trainer_id": random.randint(1, num_trainers),
-                    "date": fake.date_time_between(start_date='-20y', end_date='+3y'),
+                    "date": fake.date_time_between(start_date='-5y', end_date='+1y'),
                     "start_time": s_time,#start_time,
                     "end_time": end_time,#start_time.timedelta(hours=1),
                     "class_type_id": random.randint(1, num_class_types),
@@ -265,10 +270,11 @@ def populate_comments():
         except Exception as error:
             print(error)
 
-populate_trainers()     
-populate_dogs()
-populate_class_types()
-populate_rooms()
+# populate_trainers()     
+# populate_dogs()
+# populate_class_types()
+# populate_rooms()
+
 populate_classes()
-populate_attendance()
-populate_comments()
+# populate_attendance()
+# populate_comments()
